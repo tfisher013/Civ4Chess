@@ -11,11 +11,10 @@
 #
 import CvUtil
 import CvEventManager
-import CvCivChessEvents
 from CvPythonExtensions import *
+import CvCiv4ChessEventManager
 
-civChessEventManager = CvCivChessEvents.CvCivChessEvents()
-normalEventManager = CvEventManager.CvEventManager()
+civChessEventManager = CvCiv4ChessEventManager.CvCiv4ChessEventManager()
 
 def getEventManager():
 	return civChessEventManager

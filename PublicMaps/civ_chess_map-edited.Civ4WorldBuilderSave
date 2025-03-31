@@ -1011,7 +1011,6 @@ BeginPlot
 	BeginUnit
 		UnitType=UNIT_WARRIOR, UnitOwner=0
 		Level=1, Experience=0
-		FacingDirection=0
 		UnitAIType=UNITAI_ATTACK
 	EndUnit
 EndPlot

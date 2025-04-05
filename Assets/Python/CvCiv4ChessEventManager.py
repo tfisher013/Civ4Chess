@@ -19,16 +19,38 @@ import os
 gc = CyGlobalContext()
 localText = CyTranslator()
 
+def areUnitsEqual(unitA, unitB):
+	""" Returns True if the two provided units represent the same unit in gameplay
+
+        Args:
+            unitA: A CyUnit object
+            unitB: A CyUnit object
+
+        Returns:
+            True if the two units are the same units in gameplay, False otherwise
+	"""
+
+	if unitA.getID() != unitB.getID():
+		return False
+	if unitA.getOwner() != unitB.getOwner():
+		return False
+	if unitA.getX() != unitB.getX():
+		return False
+	if unitA.getY() != unitB.getY():
+		return False
+	if unitA.getUnitType() != unitB.getUnitType():
+		return False
+	if unitA.hasMoved() != unitB.hasMoved():
+		return False
+
+
+	return True
+
 class CvCiv4ChessEventManager(CvEventManager.CvEventManager):
 	def __init__(self):
 		# initialize base class
-		sys.stdout.write("We are initializing\n")
-
 		self.parent = CvEventManager.CvEventManager
 		self.parent.__init__(self)
-
-		sys.stdout.write("Registering onGameStart\n")
-		#self.EventHandlerMap['GameStart'] = self.onGameStart
 		
 	def onGameStart(self, argsList):
 		'Called at the start of the game'
@@ -37,38 +59,16 @@ class CvCiv4ChessEventManager(CvEventManager.CvEventManager):
 
 		CyInterface().addImmediateMessage("Let's play chess", "")
 
-		CyInterface().addImmediateMessage("The map has " + str(CyMap().numPlots()) + " number of plots", "")
-
-		for width in range(gc.getMap().getGridWidth()):
-			for height in range(gc.getMap().getGridHeight()):
-				CyInterface().addImmediateMessage("Setting plot ("+str(width)+","+str(height)+")", "")
-				#plot = CyMap().plot(width, height)
-				plot = gc.getMap().plot(width, height)
-				CyInterface().addImmediateMessage("We did get the plot, right?", "")
-				CyInterface().addImmediateMessage("val: "+str(plot)+", type: "+str(type(plot)), "")
-				
-				if plot is not None:
-					plot.setRevealed(0, True, False, 0)
-					plot.setRevealed(1, True, False, 1)
-					plot.updateVisibility()
-					sys.stdout.write("Revealing plot ("+str(width)+", "+str(height)+")\n")
-				# if plot.isUnit() and plot.getUnit(0).getOwner() == 0:
-				# 	plot.getUnit(0).rotateFacingDirectionClockwise()
-				# 	plot.getUnit(0).rotateFacingDirectionClockwise()
-
-		for iPlayer in range(2):
+		# give all units the ability to view the entire board			
+		for iPlayer in range(gc.getGame().getReplayInfo().getNumPlayers()):
 			player = gc.getPlayer(iPlayer)
 			for iUnit in range(player.getNumUnits()):
 				player.getUnit(iUnit).setHasPromotion(0, True)
-
-		CyInterface().addImmediateMessage("Done", "")
-
 		
 	def onBeginGameTurn(self, argsList):
 		'Called at the beginning of a players turn'
 		self.parent.onBeginGameTurn(self, argsList)
 		iGameTurn = argsList[0]
-
 
 	def onBeginPlayerTurn(self, argsList):
 		'Called at the beginning of a players turn'
@@ -78,6 +78,11 @@ class CvCiv4ChessEventManager(CvEventManager.CvEventManager):
 	def onCombatResult(self, argsList):
 		'Combat Result'
 		self.parent.onCombatResult(self, argsList)
+
+		# disable gaining experience
+		defender, attacker = argsList
+		defender.setExperience(0, 0)
+		attacker.setExperience(0, 0)
 		
 	def onUnitCreated(self, argsList):
 		'Unit Completed'
@@ -95,34 +100,33 @@ class CvCiv4ChessEventManager(CvEventManager.CvEventManager):
 		'Unit Lost'
 		self.parent.onUnitLost(self, argsList)
 
-	def onGoodyReceived(self, argsList):
-		'Goody received'
-		self.parent.onGoodyReceived(self, argsList)
-		
-	def onGreatPersonBorn(self, argsList):
-		'Unit Promoted'
-		self.parent.onGreatPersonBorn(self, argsList)
-		
-	def onReligionSpread(self, argsList):
-		'Religion Has Spread to a City'
-		self.parent.onReligionSpread(self, argsList)
-		
-	def onGoldenAge(self, argsList):
-		self.parent.onGoldenAge(self, argsList)
+	def onUnitMove(self, argsList):
+		'Unit Moved'
+		self.parent.onUnitMove(self, argsList)
+
+		plot, movedUnit = argsList
+
+		# end turn after moving a unit
+		iActivePlayer = gc.getGame().getActivePlayer()
+		if movedUnit.getMoves() < 100:
+			for iUnit in range(gc.getPlayer(iActivePlayer).getNumUnits()):
+				currentUnit = gc.getPlayer(iActivePlayer).getUnit(iUnit)
+
+				if not areUnitsEqual(movedUnit, currentUnit):
+					currentUnit.finishMoves()
+				
+		CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
+
+	def onEndGameTurn(self, argsList):
+		'Turn Ended'
+
+		# rotate camera?
 				
 	def onSetPlayerAlive(self, argsList):
 		'Set Player Alive Event'
 		self.parent.onSetPlayerAlive(self, argsList)
 		iPlayerID = argsList[0]
 		bNewValue = argsList[1]
-		
-	def onCityBuilt(self, argsList):
-		'City Built'
-		self.parent.onCityBuilt(self, argsList)
-
-	def onCityAcquired(self, argsList):
-		'City Acquired'
-		self.parent.onCityAcquired(self, argsList)
 
 	def onVictory(self, argsList):
 		'Victory'

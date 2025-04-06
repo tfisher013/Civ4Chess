@@ -367,11 +367,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_AXEMAN, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=1,y=2
@@ -379,11 +374,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=1,y=3
@@ -419,11 +409,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=1,y=8
@@ -431,11 +416,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_AXEMAN, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=1,y=9
@@ -458,11 +438,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_CHARIOT, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=2,y=2
@@ -470,11 +445,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=2,y=3
@@ -510,11 +480,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=2,y=8
@@ -522,11 +487,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_CHARIOT, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=2,y=9
@@ -549,11 +509,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_ARCHER, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=3,y=2
@@ -561,11 +516,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=3,y=3
@@ -601,11 +551,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=3,y=8
@@ -613,11 +558,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_ARCHER, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=3,y=9
@@ -640,9 +580,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_PROPHET, UnitOwner=0
-	EndUnit
 EndPlot
 BeginPlot
 	x=4,y=2
@@ -650,11 +587,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=4,y=3
@@ -690,11 +622,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=4,y=8
@@ -702,9 +629,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_PROPHET, UnitOwner=1
-	EndUnit
 EndPlot
 BeginPlot
 	x=4,y=9
@@ -727,9 +651,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_SPY, UnitOwner=0
-	EndUnit
 EndPlot
 BeginPlot
 	x=5,y=2
@@ -737,11 +658,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=5,y=3
@@ -777,11 +693,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=5,y=8
@@ -789,9 +700,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_SPY, UnitOwner=1
-	EndUnit
 EndPlot
 BeginPlot
 	x=5,y=9
@@ -814,11 +722,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_ARCHER, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=6,y=2
@@ -826,11 +729,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=6,y=3
@@ -866,11 +764,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=6,y=8
@@ -878,11 +771,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_ARCHER, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=6,y=9
@@ -905,11 +793,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_CHARIOT, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=7,y=2
@@ -917,11 +800,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=7,y=3
@@ -957,11 +835,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=7,y=8
@@ -969,11 +842,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_CHARIOT, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=7,y=9
@@ -996,11 +864,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_AXEMAN, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=8,y=2
@@ -1008,11 +871,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=0
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=8,y=3
@@ -1048,11 +906,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_WARRIOR, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=8,y=8
@@ -1060,11 +913,6 @@ BeginPlot
 	PlotType=2
 	TeamReveal=0,
 	TeamReveal=1,
-	BeginUnit
-		UnitType=UNIT_AXEMAN, UnitOwner=1
-		Level=1, Experience=0
-		UnitAIType=UNITAI_ATTACK
-	EndUnit
 EndPlot
 BeginPlot
 	x=8,y=9

@@ -11,13 +11,14 @@
 #
 import CvUtil
 import CvEventManager
+import CvCiv4ChessEvents
 from CvPythonExtensions import *
-import CvCiv4ChessEventManager
 
-civChessEventManager = CvCiv4ChessEventManager.CvCiv4ChessEventManager()
+ModEventManager = CvCiv4ChessEvents.CvCiv4ChessEvents()
+normalEventManager = CvEventManager.CvEventManager()
 
 def getEventManager():
-	return civChessEventManager
+	return ModEventManager
 	
 def onEvent(argsList):
 	'Called when a game event happens - return 1 if the event was consumed'

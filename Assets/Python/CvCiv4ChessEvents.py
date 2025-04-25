@@ -8,6 +8,7 @@ from CvScreenEnums import *
 from PyHelpers import *
 import CvUtil
 import CvGameUtils
+import chess
 
 # globals
 gc = CyGlobalContext()
@@ -76,6 +77,33 @@ def setupPieces(pieceSetKey="ANCIENT"):
     gc.getPlayer(iActivePlayer).initUnit(pieceSet["KING"], 4, 1, UnitAITypes.NO_UNITAI, DirectionTypes.DIRECTION_NORTH)
 
 
+def areUnitsEqual(unit1, unit2):
+    """
+    Determines whether the two provided CyUnit objects represent the same unit in play
+
+    Args:
+        unit1: a CyUnit object
+        unit2: a CyUnit object
+
+    Returns:
+        True if the objects represent the same unit in play; False otherwise
+    """
+
+    if unit1.getID() != unit2.getID():
+        return False
+    if unit1.getMoves() != unit2.getMoves():
+        return False
+    if unit1.movesLeft() != unit2.movesLeft():
+        return False
+    if unit1.getOwner() != unit2.getOwner():
+        return False
+    if unit1.getX() != unit2.getX():
+        return False
+    if unit2.getY() != unit2.getY():
+        return False
+    
+    return True
+
 class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 	
     def __init__(self):
@@ -95,9 +123,27 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
             for iUnit in range(player.getNumUnits()):
                 player.getUnit(iUnit).setHasPromotion(0, True)
 
+        # test import of python-chess
+        board = chess.Board()
+        sys.stdout.write(str(board))
+
         CyInterface().addImmediateMessage("Let's play chess", "")
 
-					
+    def onUnitMove(self, argsList):
+        'Unit Moved'
+        self.parent.onUnitMove(self, argsList)
+
+        fromPlot, movedUnit, toPlot = argsList
+
+		# end turn after moving a unit
+        iActivePlayer = gc.getGame().getActivePlayer()
+        for iUnit in range(gc.getPlayer(iActivePlayer).getNumUnits()):
+            currentUnit = gc.getPlayer(iActivePlayer).getUnit(iUnit)
+            if not areUnitsEqual(currentUnit, movedUnit):
+                currentUnit.finishMoves()
+                
+        CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
+
     def onUnitKilled(self, argsList):
         'Unit Killed'
         self.parent.onUnitKilled(self, argsList)

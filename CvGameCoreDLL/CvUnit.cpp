@@ -2428,6 +2428,12 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 			{
 				return false;
 			}
+
+			// Civ4Chess: cannot stack units
+			if (pPlot->getNumUnits() > 0)
+			{
+				return false;
+			}
 		}
 	}
 
@@ -2911,6 +2917,9 @@ void CvUnit::automate(AutomateTypes eAutomate)
 
 bool CvUnit::canScrap() const
 {
+	// Civ4Chess: no unit deletion
+	return false;
+
 	if (plot()->isFighting())
 	{
 		return false;
@@ -3306,6 +3315,9 @@ bool CvUnit::canHold(const CvPlot* pPlot) const
 
 bool CvUnit::canSleep(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no sleep option
+	return false;
+
 	if (isFortifyable())
 	{
 		return false;
@@ -3322,6 +3334,9 @@ bool CvUnit::canSleep(const CvPlot* pPlot) const
 
 bool CvUnit::canFortify(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no fortify action
+	return false;
+
 	if (!isFortifyable())
 	{
 		return false;
@@ -3435,6 +3450,9 @@ bool CvUnit::canHeal(const CvPlot* pPlot) const
 
 bool CvUnit::canSentry(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no sentry action
+	return false;
+
 	if (!canDefend(pPlot))
 	{
 		return false;
@@ -5678,6 +5696,9 @@ int CvUnit::getDiscoverResearch(TechTypes eTech) const
 
 bool CvUnit::canDiscover(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no tech discovery (great people can be pieces!)
+	return false;
+
 	TechTypes eTech;
 
 	eTech = getDiscoveryTech();
@@ -6294,6 +6315,9 @@ bool CvUnit::isIntruding() const
 
 bool CvUnit::canGoldenAge(const CvPlot* pPlot, bool bTestVisible) const
 {
+	// Civ4Chess: no golden ages (great people can be pieces!)
+	return false;
+
 	if (!isGoldenAge())
 	{
 		return false;
@@ -6394,6 +6418,9 @@ bool CvUnit::build(BuildTypes eBuild)
 
 bool CvUnit::canPromote(PromotionTypes ePromotion, int iLeaderUnitId) const
 {
+	// Civ4Chess: no promotions
+	return false;
+
 	if (iLeaderUnitId >= 0)
 	{
 		if (iLeaderUnitId == getID())
@@ -6541,6 +6568,9 @@ int CvUnit::canLead(const CvPlot* pPlot, int iUnitId) const
 {
 	PROFILE_FUNC();
 
+	// Civ4Chess: no leading (great people can be pieces!)
+	return false;
+
 	if (isDelayedDeath())
 	{
 		return 0;
@@ -6582,6 +6612,9 @@ int CvUnit::canLead(const CvPlot* pPlot, int iUnitId) const
 
 int CvUnit::canGiveExperience(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no giving experience (great people can be pieces!)
+	return false;
+
 	int iNumUnits = 0;
 
 	if (NO_UNIT != getUnitType() && m_pUnitInfo->getLeaderExperience() > 0)
@@ -6723,6 +6756,9 @@ bool CvUnit::upgradeAvailable(UnitTypes eFromUnit, UnitClassTypes eToUnitClass, 
 
 bool CvUnit::canUpgrade(UnitTypes eUnit, bool bTestVisible) const
 {
+	// Civ4Chess: no unit upgrades
+	return false;
+
 	if (eUnit == NO_UNIT)
 	{
 		return false;
@@ -7092,6 +7128,9 @@ bool CvUnit::isHuman() const
 
 int CvUnit::visibilityRange() const
 {
+	// Civ4Chess: all units should be able to view the entire board,
+	// and this is easier than editing the XML for each unit
+	return 10;
 	return (GC.getDefineINT("UNIT_VISIBILITY_RANGE") + getExtraVisibilityRange());
 }
 
@@ -9677,6 +9716,9 @@ void CvUnit::setExperience(int iNewValue, int iMax)
 
 void CvUnit::changeExperience(int iChange, int iMax, bool bFromCombat, bool bInBorders, bool bUpdateGlobal)
 {
+	// Civ4Chess: no experience gained
+	iChange = 0;
+
 	int iUnitExperience = iChange;
 
 	if (bFromCombat)

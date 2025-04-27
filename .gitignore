@@ -19,3 +19,4 @@ CvGameCoreDLL/*.vcxproj
 CvGameCoreDLL/*.user
 CvGameCoreDLL/*.project
 CvGameCoreDLL/*.inl
+CvGameCoreDLL/*.opensdf

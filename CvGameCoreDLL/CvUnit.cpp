@@ -2276,6 +2276,12 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 		}
 	}
 
+	// Civ4Chess: no stacking friendly units
+	if (!bAttack && pPlot->getNumUnits() > 0)
+	{
+		return false;
+	}
+
 	// Cannot move around in unrevealed land freely
 	if (m_pUnitInfo->isNoRevealMap() && willRevealByMove(pPlot))
 	{
@@ -2429,11 +2435,6 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 				return false;
 			}
 
-			// Civ4Chess: cannot stack units
-			if (pPlot->getNumUnits() > 0)
-			{
-				return false;
-			}
 		}
 	}
 

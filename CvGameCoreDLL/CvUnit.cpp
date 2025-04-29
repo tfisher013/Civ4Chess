@@ -82,7 +82,7 @@ void CvUnit::reloadEntity()
 }
 
 
-void CvUnit::init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection)
+void CvUnit::init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection, ChessPieceTypes eChessPieceType)
 {
 	CvWString szBuffer;
 	int iUnitName;
@@ -98,6 +98,11 @@ void CvUnit::init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOw
 		m_eFacingDirection = DIRECTION_SOUTH;
 	else
 		m_eFacingDirection = eFacingDirection;
+
+	if(eChessPieceType != NO_CHESS_PIECE)
+	{
+		m_eChessPieceType = eChessPieceType;
+	}
 
 	//--------------------------------
 	// Init containers
@@ -348,6 +353,8 @@ void CvUnit::reset(int iID, UnitTypes eUnit, PlayerTypes eOwner, bool bConstruct
 	m_iBaseCombat = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->getCombat() : 0;
 	m_eLeaderUnitType = NO_UNIT;
 	m_iCargoCapacity = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->getCargoSpace() : 0;
+
+	m_eChessPieceType = NO_CHESS_PIECE;
 
 	m_combatUnit.reset();
 	m_transportUnit.reset();
@@ -12715,4 +12722,9 @@ int CvUnit::getSelectionSoundScript() const
 		iScriptId = GC.getCivilizationInfo(getCivilizationType()).getSelectionSoundScriptId();
 	}
 	return iScriptId;
+}
+
+ChessPieceTypes CvUnit::getChessPieceType() const
+{
+	return m_eChessPieceType;
 }

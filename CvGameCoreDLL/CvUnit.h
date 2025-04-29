@@ -73,7 +73,7 @@ public:
 	virtual ~CvUnit();
 	
 	void reloadEntity();
-	void init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection);
+	void init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection, ChessPieceTypes eChessPieceType);
 	void uninit();
 	void reset(int iID = 0, UnitTypes eUnit = NO_UNIT, PlayerTypes eOwner = NO_PLAYER, bool bConstructorCall = false);
 	void setupGraphical();
@@ -770,7 +770,12 @@ public:
 	virtual void AI_setUnitAIType(UnitAITypes eNewValue) = 0;
     virtual int AI_sacrificeValue(const CvPlot* pPlot) const = 0;
 
+	DllExport ChessPieceTypes getChessPieceType() const;
+
 protected:
+
+	// Civ4Chess: used to record which piece type this unit is representing
+	ChessPieceTypes m_eChessPieceType;
 
 	int m_iID;
 	int m_iGroupID;

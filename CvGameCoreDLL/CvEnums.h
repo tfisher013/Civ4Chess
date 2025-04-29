@@ -2755,4 +2755,17 @@ enum CivilopediaWidgetShowTypes
 	CIVILOPEDIA_WIDGET_SHOW_WATER,
 };
 
+// Civ4Chess: denotes which chess piece a CvUnit is acting as
+enum ChessPieceTypes
+{
+    NO_CHESS_PIECE = -1,
+    CHESS_PIECE_PAWN,
+    CHESS_PIECE_ROOK,
+    CHESS_PIECE_KNIGHT,
+    CHESS_PIECE_BISHOP,
+    CHESS_PIECE_QUEEN,
+    CHESS_PIECE_KING,
+};
+
+
 #endif	// CVENUMS_h

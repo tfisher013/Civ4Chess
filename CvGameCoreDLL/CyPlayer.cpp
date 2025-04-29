@@ -70,9 +70,9 @@ std::wstring CyPlayer::getNewCityName()
 	return m_pPlayer ? m_pPlayer->getNewCityName() : std::wstring();
 }
 
-CyUnit* CyPlayer::initUnit(int /*UnitTypes*/ iIndex, int iX, int iY, UnitAITypes eUnitAI, DirectionTypes eFacingDirection)
+CyUnit* CyPlayer::initUnit(int /*UnitTypes*/ iIndex, int iX, int iY, UnitAITypes eUnitAI, DirectionTypes eFacingDirection, ChessPieceTypes eChessPieceType)
 {
-	return m_pPlayer ? new CyUnit(m_pPlayer->initUnit((UnitTypes) iIndex, iX, iY, eUnitAI, eFacingDirection)) : NULL;
+	return m_pPlayer ? new CyUnit(m_pPlayer->initUnit((UnitTypes) iIndex, iX, iY, eUnitAI, eFacingDirection, eChessPieceType)) : NULL;
 }
 
 void CyPlayer::disbandUnit(bool bAnnounce)

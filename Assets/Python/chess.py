@@ -227,6 +227,11 @@ else:
             yield r
             bb ^= _BB_SQUARES[r]
 
+def any(iterable):
+    for element in iterable:
+        if element:
+            return True
+    return False
 
 def popcount(b):
     return _bin(b).count("1")

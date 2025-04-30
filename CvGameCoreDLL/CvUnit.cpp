@@ -2586,7 +2586,321 @@ bool CvUnit::canMoveOrAttackInto(const CvPlot* pPlot, bool bDeclareWar) const
 
 bool CvUnit::canMoveThrough(const CvPlot* pPlot) const
 {
-	return canMoveInto(pPlot, false, false, true);
+	bool bAttack = false;
+	bool bDeclareWar = false;
+	bool bIgnoreLoad = true;
+
+	FAssertMsg(pPlot != NULL, "Plot is not assigned a valid value");
+
+	if (atPlot(pPlot))
+	{
+		return false;
+	}
+
+	if (pPlot->isImpassable())
+	{
+		if (!canMoveImpassable())
+		{
+			return false;
+		}
+	}
+
+	// Civ4Chess: only knights can "move through" friendly units
+	if (m_eChessPieceType != CHESS_PIECE_KNIGHT)
+	{
+		if (!bAttack && pPlot->getNumUnits() > 0)
+		{
+			return false;
+		}
+	}
+
+	// Cannot move around in unrevealed land freely
+	if (m_pUnitInfo->isNoRevealMap() && willRevealByMove(pPlot))
+	{
+		return false;
+	}
+
+	if (GC.getUSE_SPIES_NO_ENTER_BORDERS())
+	{
+		if (isSpy() && NO_PLAYER != pPlot->getOwnerINLINE())
+		{
+			if (!GET_PLAYER(getOwnerINLINE()).canSpiesEnterBorders(pPlot->getOwnerINLINE()))
+			{
+				return false;
+			}
+		}
+	}
+
+	CvArea *pPlotArea = pPlot->area();
+	TeamTypes ePlotTeam = pPlot->getTeam();
+	bool bCanEnterArea = canEnterArea(ePlotTeam, pPlotArea);
+	if (bCanEnterArea)
+	{
+		if (pPlot->getFeatureType() != NO_FEATURE)
+		{
+			if (m_pUnitInfo->getFeatureImpassable(pPlot->getFeatureType()))
+			{
+				TechTypes eTech = (TechTypes)m_pUnitInfo->getFeaturePassableTech(pPlot->getFeatureType());
+				if (NO_TECH == eTech || !GET_TEAM(getTeam()).isHasTech(eTech))
+				{
+					if (DOMAIN_SEA != getDomainType() || pPlot->getTeam() != getTeam())  // sea units can enter impassable in own cultural borders
+					{
+						return false;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (m_pUnitInfo->getTerrainImpassable(pPlot->getTerrainType()))
+			{
+				TechTypes eTech = (TechTypes)m_pUnitInfo->getTerrainPassableTech(pPlot->getTerrainType());
+				if (NO_TECH == eTech || !GET_TEAM(getTeam()).isHasTech(eTech))
+				{
+					if (DOMAIN_SEA != getDomainType() || pPlot->getTeam() != getTeam())  // sea units can enter impassable in own cultural borders
+					{
+						if (bIgnoreLoad || !canLoad(pPlot)) 
+						{ 
+							return false;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	switch (getDomainType())
+	{
+	case DOMAIN_SEA:
+		if (!pPlot->isWater() && !canMoveAllTerrain())
+		{
+			if (!pPlot->isFriendlyCity(*this, true) || !pPlot->isCoastalLand()) 
+			{
+				return false;
+			}
+		}
+		break;
+
+	case DOMAIN_AIR:
+		if (!bAttack)
+		{
+			bool bValid = false;
+
+			if (pPlot->isFriendlyCity(*this, true))
+			{
+				bValid = true;
+
+				if (m_pUnitInfo->getAirUnitCap() > 0)
+				{
+					if (pPlot->airUnitSpaceAvailable(getTeam()) <= 0)
+					{
+						bValid = false;
+					}
+				}
+			}
+
+			if (!bValid)
+			{
+				if (bIgnoreLoad || !canLoad(pPlot))
+				{
+					return false;
+				}
+			}
+		}
+
+		break;
+
+	case DOMAIN_LAND:
+		if (pPlot->isWater() && !canMoveAllTerrain())
+		{
+			if (!pPlot->isCity() || 0 == GC.getDefineINT("LAND_UNITS_CAN_ATTACK_WATER_CITIES"))
+			{
+				if (bIgnoreLoad || !isHuman() || plot()->isWater() || !canLoad(pPlot))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+
+	case DOMAIN_IMMOBILE:
+		return false;
+		break;
+
+	default:
+		FAssert(false);
+		break;
+	}
+
+	if (isAnimal())
+	{
+		if (pPlot->isOwned())
+		{
+			return false;
+		}
+
+		if (!bAttack)
+		{
+			if (pPlot->getBonusType() != NO_BONUS)
+			{
+				return false;
+			}
+
+			if (pPlot->getImprovementType() != NO_IMPROVEMENT)
+			{
+				return false;
+			}
+
+			if (pPlot->getNumUnits() > 0)
+			{
+				return false;
+			}
+		}
+	}
+
+	if (isNoCapture())
+	{
+		if (!bAttack)
+		{
+			if (pPlot->isEnemyCity(*this))
+			{
+				return false;
+			}
+
+		}
+	}
+
+	if (bAttack)
+	{
+		if (isMadeAttack() && !isBlitz())
+		{
+			return false;
+		}
+	}
+
+	if (getDomainType() == DOMAIN_AIR)
+	{
+		if (bAttack)
+		{
+			if (!canAirStrike(pPlot))
+			{
+				return false;
+			}
+		}
+	}
+	else
+	{
+		if (canAttack())
+		{
+			if (bAttack || !canCoexistWithEnemyUnit(NO_TEAM))
+			{
+				if (!isHuman() || (pPlot->isVisible(getTeam(), false)))
+				{
+					if (pPlot->isVisibleEnemyUnit(this) != bAttack)
+					{
+						//FAssertMsg(isHuman() || (!bDeclareWar || (pPlot->isVisibleOtherUnit(getOwnerINLINE()) != bAttack)), "hopefully not an issue, but tracking how often this is the case when we dont want to really declare war");
+						if (!bDeclareWar || (pPlot->isVisibleOtherUnit(getOwnerINLINE()) != bAttack && !(bAttack && pPlot->getPlotCity() && !isNoCapture())))
+						{
+							return false;
+						}
+					}
+				}
+			}
+
+			if (bAttack)
+			{
+				CvUnit* pDefender = pPlot->getBestDefender(NO_PLAYER, getOwnerINLINE(), this, true);
+				if (NULL != pDefender)
+				{
+					if (!canAttack(*pDefender))
+					{
+						return false;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (bAttack)
+			{
+				return false;
+			}
+
+			if (!canCoexistWithEnemyUnit(NO_TEAM))
+			{
+				if (!isHuman() || pPlot->isVisible(getTeam(), false))
+				{
+					if (pPlot->isEnemyCity(*this))
+					{
+						return false;
+					}
+
+					if (pPlot->isVisibleEnemyUnit(this))
+					{
+						return false;
+					}
+				}
+			}
+		}
+
+		if (isHuman())
+		{
+			ePlotTeam = pPlot->getRevealedTeam(getTeam(), false);
+			bCanEnterArea = canEnterArea(ePlotTeam, pPlotArea);
+		}
+
+		if (!bCanEnterArea)
+		{
+			FAssert(ePlotTeam != NO_TEAM);
+
+			if (!(GET_TEAM(getTeam()).canDeclareWar(ePlotTeam)))
+			{
+				return false;
+			}
+
+			if (isHuman())
+			{
+				if (!bDeclareWar)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				if (GET_TEAM(getTeam()).AI_isSneakAttackReady(ePlotTeam))
+				{
+					if (!(getGroup()->AI_isDeclareWar(pPlot)))
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	if (GC.getUSE_UNIT_CANNOT_MOVE_INTO_CALLBACK())
+	{
+		// Python Override
+		CyArgsList argsList;
+		argsList.add(getOwnerINLINE());	// Player ID
+		argsList.add(getID());	// Unit ID
+		argsList.add(pPlot->getX());	// Plot X
+		argsList.add(pPlot->getY());	// Plot Y
+		long lResult=0;
+		gDLL->getPythonIFace()->callFunction(PYGameModule, "unitCannotMoveInto", argsList.makeFunctionArgs(), &lResult);
+
+		if (lResult != 0)
+		{
+			return false;
+		}
+	}
+
+	return true;	
+
 }
 
 

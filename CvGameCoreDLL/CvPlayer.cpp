@@ -6236,6 +6236,9 @@ int CvPlayer::calculateUnitCost(int& iFreeUnits, int& iFreeMilitaryUnits, int& i
 
 	FAssert(iSupport >= 0);
 
+	// no unit costs in Civ4Chess
+	iSupport = 0;
+
 	return std::max(0, iSupport);
 }
 
@@ -6292,6 +6295,9 @@ int CvPlayer::calculateUnitSupply(int& iPaidUnits, int& iBaseSupplyCost) const
 	}
 
 	FAssert(iSupply >= 0);
+
+	// no unit supply in Civ4Chess
+	iSupply = 0;
 
 	return iSupply;
 }

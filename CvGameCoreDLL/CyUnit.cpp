@@ -1674,3 +1674,8 @@ std::string CyUnit::getButton() const
 {
 	return m_pUnit ? m_pUnit->getButton() : "";
 }
+
+int CyUnit::getChessPieceType()
+{
+	return m_pUnit ? m_pUnit->getChessPieceType() : -1;
+}

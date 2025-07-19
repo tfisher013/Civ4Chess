@@ -402,6 +402,8 @@ public:
 	void attackForDamage(CyUnit *defender, int attakerDamageChange, int defenderDamageChange);
 	void rangeStrike(int iX, int iY);
 
+	int getChessPieceType();
+
 protected:
 	CvUnit* m_pUnit;
 };

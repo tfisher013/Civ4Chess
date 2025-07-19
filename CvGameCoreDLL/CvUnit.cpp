@@ -7459,7 +7459,27 @@ int CvUnit::visibilityRange() const
 
 int CvUnit::baseMoves() const
 {
-	return (m_pUnitInfo->getMoves() + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType()));
+	switch(m_eChessPieceType) {
+		case CHESS_PIECE_PAWN:
+			if(getOwner() == 0 && getY() == 2){
+				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+			} else if(getOwner() == 1 && getY() == 8) {
+				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+			} else {
+				return 1 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+
+			}
+		case CHESS_PIECE_KNIGHT:
+			return 3 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+		case CHESS_PIECE_BISHOP:
+		case CHESS_PIECE_ROOK:
+		case CHESS_PIECE_QUEEN:
+			return 8 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+		case CHESS_PIECE_KING:
+			return 1 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+		default:
+			return getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+	}
 }
 
 

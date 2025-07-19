@@ -3631,7 +3631,8 @@ void CvUnit::unloadAll()
 
 bool CvUnit::canHold(const CvPlot* pPlot) const
 {
-	return true;
+	// Civ4Chess: no skip turn option
+	return false;
 }
 
 
@@ -4303,6 +4304,9 @@ bool CvUnit::nuke(int iX, int iY)
 
 bool CvUnit::canRecon(const CvPlot* pPlot) const
 {
+	// Civ4Chess: no recon
+	return false;
+
 	if (getDomainType() != DOMAIN_AIR)
 	{
 		return false;
@@ -7470,7 +7474,7 @@ int CvUnit::baseMoves() const
 
 			}
 		case CHESS_PIECE_KNIGHT:
-			return 3 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
+			return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 		case CHESS_PIECE_BISHOP:
 		case CHESS_PIECE_ROOK:
 		case CHESS_PIECE_QUEEN:

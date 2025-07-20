@@ -2574,6 +2574,73 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 		}
 	}
 
+	// Civ4Chess: piece specific movement rules
+	int toPlotX = pPlot->getX();
+    int toPlotY = pPlot->getY();
+	switch (m_eChessPieceType)
+	{
+		case CHESS_PIECE_PAWN:
+			// no backward or lateral pawn moves
+			if (
+				(m_eOwner == 0 && toPlotY <= m_iY) ||
+				(m_eOwner == 1 && toPlotY >= m_iY)
+			) {
+				return false;
+			}
+
+			// no moves beyond an adjacent file
+			if (abs(toPlotX - m_iX) > 1) {
+				return false;
+			}
+
+			// limit on forward movement
+			if (m_eOwner == 0 && m_iY == 2 && abs(toPlotY - m_iY) > 2) {
+				return false;
+			} else if (m_eOwner == 1 && m_iY == 8 && abs(toPlotY - m_iY) > 2) {
+				return false;
+			} else if (abs(toPlotY - m_iY) > 1) {
+				return false;
+			}
+
+			break;
+		case CHESS_PIECE_KNIGHT:
+			// enforce only L moves
+			if (abs(toPlotX - m_iX) == 2 && abs(toPlotY - m_iY) == 1) {
+				return false;
+			} else if (abs(toPlotX - m_iX) == 1 && abs(toPlotY - m_iY) == 2) {
+				return false;
+			}
+
+			break;
+		case CHESS_PIECE_BISHOP:
+			// enforce only diagonal moves
+			if (abs(toPlotX - m_iX) != abs(toPlotY - m_iY)) {
+				return false;
+			}
+
+			break;
+		case CHESS_PIECE_ROOK:
+			// enforce only horizontal and vertical moves
+			if (toPlotX != m_iX && toPlotY != m_iY) {
+				return false;
+			}
+
+			break;
+		case CHESS_PIECE_QUEEN:
+			// enforce only horizontal, vertical, and diagonal moves
+			if (
+				(toPlotX != m_iX && toPlotY != m_iY) &&
+				(abs(toPlotX - m_iX) != abs(toPlotY - m_iY))
+			) {
+				return false;
+			}
+
+			break;
+		case CHESS_PIECE_KING:
+		default:
+			break;
+	}
+
 	return true;
 }
 
@@ -3204,6 +3271,9 @@ bool CvUnit::canAutomate(AutomateTypes eAutomate) const
 		break;
 
 	case AUTOMATE_EXPLORE:
+		// Civ4Chess: no automated exploration
+		return false;
+
 		if ((!canFight() && (getDomainType() != DOMAIN_SEA)) || (getDomainType() == DOMAIN_AIR) || (getDomainType() == DOMAIN_IMMOBILE))
 		{
 			return false;
@@ -7471,7 +7541,6 @@ int CvUnit::baseMoves() const
 				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 			} else {
 				return 1 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
-
 			}
 		case CHESS_PIECE_KNIGHT:
 			return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());

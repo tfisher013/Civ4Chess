@@ -2580,7 +2580,7 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 	switch (m_eChessPieceType)
 	{
 		case CHESS_PIECE_PAWN:
-			// no backward or lateral pawn moves
+			// no backward moves
 			if (
 				(m_eOwner == 0 && toPlotY <= m_iY) ||
 				(m_eOwner == 1 && toPlotY >= m_iY)
@@ -2588,26 +2588,59 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 				return false;
 			}
 
-			// no moves beyond an adjacent file
+			// no moves beyond adjacent files
 			if (abs(toPlotX - m_iX) > 1) {
 				return false;
 			}
 
+			// no horizontal movement outside a capture
+			if (!bAttack && (toPlotX - m_iX) > 0) {
+				return false;
+			}
+
+			// no moves greater than two squares forward
+			if (abs(toPlotY - m_iY) > 2) {
+				return false;
+			}
+
 			// limit on forward movement
-			if (m_eOwner == 0 && m_iY == 2 && abs(toPlotY - m_iY) > 2) {
+			if (m_eOwner == 0 && m_iY != 2 && abs(toPlotY - m_iY) > 1) {
 				return false;
-			} else if (m_eOwner == 1 && m_iY == 8 && abs(toPlotY - m_iY) > 2) {
+			} 
+			if (m_eOwner == 1 && m_iY != 7 && abs(toPlotY - m_iY) > 1) {
 				return false;
-			} else if (abs(toPlotY - m_iY) > 1) {
-				return false;
+			}
+
+			// prevent moving through friendly units
+			if (m_eOwner == 0 && m_iY == 2 && toPlotY - m_iY == 2) {
+				if (GC.getMapINLINE().plot(m_iX, m_iY + 1)->isUnit()) {
+					return false;
+				}
+			}
+			if (m_eOwner == 1 && m_iY == 7 && m_iY - toPlotY == 2) {
+				if (GC.getMapINLINE().plot(m_iX, m_iY - 1)->isUnit()) {
+					return false;
+				}
+			}
+
+			// prevent forward attacks
+			if (bAttack) {
+				if (abs(m_iY - toPlotY) != 1) {
+					return false;
+				}
+				if (abs(m_iX - toPlotX) != 1) {
+					return false;
+				}
 			}
 
 			break;
 		case CHESS_PIECE_KNIGHT:
 			// enforce only L moves
 			if (abs(toPlotX - m_iX) == 2 && abs(toPlotY - m_iY) == 1) {
-				return false;
+				return true;
 			} else if (abs(toPlotX - m_iX) == 1 && abs(toPlotY - m_iY) == 2) {
+				return true;
+			} else {
 				return false;
 			}
 
@@ -2618,11 +2651,40 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 				return false;
 			}
 
+			// prevent moving through friendly units
+			for (int i = 1; i < abs(toPlotX - m_iX); i++) {
+				int newX = m_iX > toPlotX ? m_iX - i : m_iX + i;
+				int newY = m_iY > toPlotY ? m_iY - i : m_iY + i;
+				CvPlot* inBetweenPlot = GC.getMapINLINE().plot(newX, newY);
+				if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+					return false;
+				}
+			}
+
 			break;
 		case CHESS_PIECE_ROOK:
 			// enforce only horizontal and vertical moves
 			if (toPlotX != m_iX && toPlotY != m_iY) {
 				return false;
+			}
+
+			// prevent moving through friendly units
+			for (int i = 1; i < std::max(abs(toPlotX - m_iX), abs(toPlotY - m_iY)); i++) {
+				if (m_iX != toPlotX) { 
+					int newX = m_iX > toPlotX ? m_iX - i : m_iX + i;
+
+					CvPlot* inBetweenPlot = GC.getMapINLINE().plot(newX, m_iY);
+					if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+						return false;
+					}
+				} else {
+					int newY = m_iY > toPlotY ? m_iY - i : m_iY + i;
+
+					CvPlot* inBetweenPlot = GC.getMapINLINE().plot(m_iX, newY);
+					if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+						return false;
+					}
+				}
 			}
 
 			break;
@@ -2635,8 +2697,41 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 				return false;
 			}
 
+			// prevent moving through friendly units
+			if (abs(m_iX - toPlotX) == abs(m_iY - toPlotY)) {
+				for (int i = 1; i < abs(toPlotX - m_iX); i++) {
+					int newX = m_iX > toPlotX ? m_iX - i : m_iX + i;
+					int newY = m_iY > toPlotY ? m_iY - i : m_iY + i;
+					CvPlot* inBetweenPlot = GC.getMapINLINE().plot(newX, newY);
+					if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+						return false;
+					}
+				}
+			} else {
+				for (int i = 1; i < std::max(abs(toPlotX - m_iX), abs(toPlotY - m_iY)); i++) {
+					if (m_iX != toPlotX) { 
+						int newX = m_iX > toPlotX ? m_iX - i : m_iX + i;
+
+						CvPlot* inBetweenPlot = GC.getMapINLINE().plot(newX, m_iY);
+						if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+							return false;
+						}
+					} else {
+						int newY = m_iY > toPlotY ? m_iY - i : m_iY + i;
+
+						CvPlot* inBetweenPlot = GC.getMapINLINE().plot(m_iX, newY);
+						if (inBetweenPlot->isUnit() && inBetweenPlot->getUnitByIndex(0)->getOwnerINLINE() == m_eOwner) {
+							return false;
+						}
+					}
+				}
+			}
+
 			break;
 		case CHESS_PIECE_KING:
+			if (abs(m_iX - toPlotX) > 1 || abs(m_iY - toPlotY) > 1) {
+				return false;
+			}
 		default:
 			break;
 	}

@@ -545,6 +545,10 @@ void CvSelectionGroup::updateMission()
 					}
 				}
 			}
+
+			// Civ4Chess: consume remaining movement after completing mission
+			CvUnit* headUnit = getHeadUnit();
+			headUnit->finishMoves();
 		}
 	}
 }

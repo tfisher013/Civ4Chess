@@ -1,7 +1,6 @@
 from CvPythonExtensions import *
 import sys
 import Popup as PyPopup
-from PyHelpers import PyPlayer
 import pickle
 import CvEventManager
 from CvScreenEnums import *
@@ -240,9 +239,6 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         self.parent.__init__(self)
         self.civ_chess_obj = CivChessObj()
 
-        # used for storing the first plot of multihop moves
-        self.path_start_plot = None
-
     def onGameStart(self, argsList):
         "Called at the start of the game"
         self.parent.onGameStart(self, argsList)
@@ -252,6 +248,7 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         # ensure sides are at war
         gc.getTeam(0).declareWar(1, True, WarPlanTypes.NO_WARPLAN)
+        gc.getTeam(1).declareWar(0, True, WarPlanTypes.NO_WARPLAN)
 
         CyInterface().addImmediateMessage("Let's play chess", "")
 
@@ -261,26 +258,13 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         toPlot, movedUnit, fromPlot = argsList
 
-        if self.path_start_plot is None:
-            self.path_start_plot = fromPlot
-
-        # if the unit has moved to the final plot of its path, do the following
-        # a) finish the moves all of the other units of the same team
-        # b) push the move to the game board
-        if are_plots_equal(toPlot, movedUnit.getPathEndTurnPlot()):
-
-            # end all units' movement after one has finished its move
-            iActivePlayer = gc.getGame().getActivePlayer()
-            for iUnit in range(gc.getPlayer(iActivePlayer).getNumUnits()):
-                currentUnit = gc.getPlayer(iActivePlayer).getUnit(iUnit)
+        iActivePlayer = gc.getGame().getActivePlayer()
+        for iUnit in range(gc.getPlayer(iActivePlayer).getNumUnits()):
+            currentUnit = gc.getPlayer(iActivePlayer).getUnit(iUnit)
+            if (movedUnit.getID() != currentUnit.getID()):
                 currentUnit.finishMoves()
 
-            # get game status after move
-            game_status = self.civ_chess_obj.process_move(self.path_start_plot, toPlot)
-
-            self.path_start_plot = None
-
-            CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
+        CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
 
     def onUnitKilled(self, argsList):
         "Unit Killed"

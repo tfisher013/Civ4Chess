@@ -90,6 +90,10 @@ bool CvUnitAI::AI_update()
 		return false;
 	}
 
+	// Civ4Chess: short-circuit normal AI unit movement
+	getGroup()->pushMission(MISSION_SKIP);
+	return false;
+
 	if (getDomainType() == DOMAIN_LAND)
 	{
 		if (plot()->isWater() && !canMoveAllTerrain())

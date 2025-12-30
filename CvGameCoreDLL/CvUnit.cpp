@@ -2770,7 +2770,7 @@ bool CvUnit::canMoveThrough(const CvPlot* pPlot) const
 	// Civ4Chess: only knights can "move through" friendly units
 	if (m_eChessPieceType != CHESS_PIECE_KNIGHT)
 	{
-		if (!bAttack && pPlot->getNumUnits() > 0)
+		if (pPlot->getNumUnits() > 0)
 		{
 			return false;
 		}
@@ -7630,7 +7630,7 @@ int CvUnit::baseMoves() const
 {
 	switch(m_eChessPieceType) {
 		case CHESS_PIECE_PAWN:
-			if(getOwner() == 0 && getY() == 2){
+			if(getOwner() == 0 && getY() == 3){
 				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 			} else if(getOwner() == 1 && getY() == 8) {
 				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());

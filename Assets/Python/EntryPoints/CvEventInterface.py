@@ -30,3 +30,6 @@ def applyEvent(argsList):
 
 def beginEvent(context, argsList=-1):
 	return getEventManager().beginEvent(context, argsList)
+
+def onPathCompleted(argsList):
+	getEventManager().onPathCompleted(argsList)

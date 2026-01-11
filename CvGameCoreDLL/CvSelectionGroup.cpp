@@ -415,6 +415,11 @@ void CvSelectionGroup::pushMission(MissionTypes eMission, int iData1, int iData2
 
 	FAssert(getOwnerINLINE() != NO_PLAYER);
 
+	// Civ4Chess: store path start when unit is moving
+	if (eMission == MISSION_MOVE_TO || eMission == MISSION_MOVE_TO_UNIT || eMission == MISSION_ROUTE_TO) {
+		pathStartPlot = getHeadUnit()->plot();
+	}
+
 	if (!bAppend)
 	{
 		if (isBusy())
@@ -549,6 +554,24 @@ void CvSelectionGroup::updateMission()
 			// Civ4Chess: consume remaining movement after completing mission
 			CvUnit* headUnit = getHeadUnit();
 			headUnit->finishMoves();
+
+			// Civ4Chess: alert the Python about a move completion so the board state can be updated
+			FAStarNode* lastPlotNode = getPathLastNode();
+			CvPlot* endPathPlot = GC.getMapINLINE().plotSorenINLINE(lastPlotNode->m_iX, lastPlotNode->m_iY);
+
+			CyArgsList args;
+			args.add(pathStartPlot->getX());
+			args.add(pathStartPlot->getY());
+			args.add(endPathPlot->getX());
+			args.add(endPathPlot->getY());
+
+			long lResult=0;
+			gDLL->getPythonIFace()->callFunction(
+				"CvEventInterface",
+				"onPathCompleted",
+				args.makeFunctionArgs(),
+				&lResult
+			);
 		}
 	}
 }

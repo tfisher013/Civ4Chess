@@ -224,6 +224,9 @@ protected:
 	void deactivateHeadMission();
 	
 	bool sentryAlert() const;
+
+	// Civ4Chess: stores the first plot in a path
+	CvPlot* pathStartPlot;
 };
 
 #endif

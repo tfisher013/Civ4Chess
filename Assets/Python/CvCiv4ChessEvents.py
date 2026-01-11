@@ -258,6 +258,7 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         toPlot, movedUnit, fromPlot = argsList
 
+        # consume all movement for all pieces besides the one that moved
         iActivePlayer = gc.getGame().getActivePlayer()
         for iUnit in range(gc.getPlayer(iActivePlayer).getNumUnits()):
             currentUnit = gc.getPlayer(iActivePlayer).getUnit(iUnit)
@@ -279,3 +280,6 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         "Called at the beginning of the end of each turn"
         self.parent.onBeginGameTurn(self, argsList)
         iGameTurn = argsList[0]
+
+    def onPathCompleted(self, path_endpoints_tuple):
+        path_start_x, path_start_y, path_end_x, path_end_y = path_endpoints_tuple

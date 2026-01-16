@@ -276,6 +276,11 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         "Called at the end of the end of each turn"
         iGameTurn = argsList[0]
 
+        game = gc.getGame()
+
+        game.setChessMove(5, 7, 5, 5)
+        sys.stdout.write("sent move")
+
     def onBeginGameTurn(self, argsList):
         "Called at the beginning of the end of each turn"
         self.parent.onBeginGameTurn(self, argsList)
@@ -283,3 +288,6 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
     def onPathCompleted(self, path_endpoints_tuple):
         path_start_x, path_start_y, path_end_x, path_end_y = path_endpoints_tuple
+
+        self.civ_chess_obj.process_move(path_start_x, path_start_y, path_end_x, path_end_y)
+        sys.stdout.write("Board FEN: " + str(self.civ_chess_obj.board.board_fen()))

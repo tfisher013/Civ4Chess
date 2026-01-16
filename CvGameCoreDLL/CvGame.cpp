@@ -24,6 +24,7 @@
 #include <set>
 #include "CvEventReporter.h"
 #include "CvMessageControl.h"
+#include "CvChessTypes.h"
 
 // interface uses
 #include "CvDLLInterfaceIFaceBase.h"
@@ -106,6 +107,11 @@ void CvGame::init(HandicapTypes eHandicap)
 
 	//--------------------------------
 	// Init other game data
+
+	m_chessMove.iStartX = 0;
+	m_chessMove.iStartY = 0;
+	m_chessMove.iEndX = 0;
+	m_chessMove.iEndY = 0;
 
 	// Turn off all MP options if it's a single player game
 	if (GC.getInitCore().getType() == GAME_SP_NEW ||
@@ -2058,6 +2064,26 @@ void CvGame::update()
 		if (getTurnSlice() == 0)
 		{
 			gDLL->getEngineIFace()->AutoSave(true);
+		}
+
+		// Civ4Chess: make AI turn
+		PlayerTypes ePlayer = getActivePlayer();
+		if (m_chessMove.iEndX != 0 && ePlayer != NO_PLAYER)
+		{
+			CvPlayer& kPlayer = GET_PLAYER(ePlayer);
+
+				CvPlot* startPlot = GC.getMapINLINE().plotSorenINLINE(m_chessMove.iStartX, m_chessMove.iStartY);
+				if (startPlot->isUnit()) {
+					CvUnit* movingUnit = startPlot->getUnitByIndex(0);
+					movingUnit->setXY(m_chessMove.iEndX, m_chessMove.iEndY, true, true, true);
+
+					m_chessMove.iStartX = 0;
+					m_chessMove.iStartY = 0;
+					m_chessMove.iEndX = 0;
+					m_chessMove.iEndY = 0;
+
+					return;
+				}
 		}
 
 		if (getNumGameTurnActive() == 0)
@@ -9036,5 +9062,13 @@ bool CvGame::pythonIsBonusIgnoreLatitudes() const
 	}
 
 	return false;
+}
+
+void CvGame::setChessMove(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	m_chessMove.iStartX = iStartX;
+	m_chessMove.iStartY = iStartY;
+	m_chessMove.iEndX = iEndX;
+	m_chessMove.iEndY = iEndY;
 }
 

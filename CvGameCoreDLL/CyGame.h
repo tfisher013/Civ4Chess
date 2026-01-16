@@ -271,6 +271,9 @@ public:
 	bool isEventActive(int /*EventTriggerTypes*/ eTrigger);
 	void doControl(int iControl);
 
+	// Civ4Chess
+	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
+
 protected:
 	CvGame* m_pGame;
 };

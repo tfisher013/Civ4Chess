@@ -8,6 +8,7 @@
 //#include "CvStructs.h"
 #include "CvDeal.h"
 #include "CvRandom.h"
+#include "CvChessTypes.h"
 
 class CvPlot;
 class CvCity;
@@ -542,6 +543,9 @@ public:
 
 	DllExport void handleDiplomacySetAIComment(DiploCommentTypes eComment) const;
 
+	// Civ4Chess
+	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
+
 protected:
 	int m_iElapsedGameTurns;
 	int m_iStartTurn;
@@ -685,6 +689,9 @@ protected:
 	CvPlot* normalizeFindLakePlot(PlayerTypes ePlayer);
 
 	void doUpdateCacheOnTurn();
+
+	// Civ4Chess: CvGame stores AI chess move
+	ChessMove m_chessMove;
 };
 
 #endif

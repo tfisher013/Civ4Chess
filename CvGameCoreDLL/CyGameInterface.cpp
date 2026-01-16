@@ -261,6 +261,9 @@ void CyGamePythonInterface()
 
 		.def("isEventActive", &CyGame::isEventActive, "bool (int /*EventTriggerTypes*/ eTrigger)")
 		.def("doControl", &CyGame::doControl, "void (int /*ControlTypes*/ iControl)")
+		
+		// Civ4Chess
+		.def("setChessMove", &CyGame::setChessMove, "void (int iStartX, int iStartY, int iEndX, int iEndY)")
 		;
 
 	python::class_<CyDeal>("CyDeal")

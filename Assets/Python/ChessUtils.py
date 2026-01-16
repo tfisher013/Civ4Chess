@@ -41,17 +41,19 @@ class CivChessObj:
 
         self.board = chess.Board()
 
-    def process_move(self, old_pyplot_obj, new_pyplot_obj):
-        """ """
+    def process_move(self, start_x, start_y, end_x, end_y):
+        """ 
+        Updates board state with a valid move
+        """
 
         # assemble UCI move
-        move_uci_string = convert_x_coord_to_file(old_pyplot_obj.getX())
+        move_uci_string = convert_x_coord_to_file(start_x)
         sys.stdout.write("\tFrom util: move_uci_string = " + move_uci_string)
-        move_uci_string += str(old_pyplot_obj.getY())
+        move_uci_string += str(start_y)
         sys.stdout.write("\tFrom util: move_uci_string = " + move_uci_string)
-        move_uci_string += convert_x_coord_to_file(new_pyplot_obj.getX())
+        move_uci_string += convert_x_coord_to_file(end_x)
         sys.stdout.write("\tFrom util: move_uci_string = " + move_uci_string)
-        move_uci_string += str(new_pyplot_obj.getY())
+        move_uci_string += str(end_y)
         sys.stdout.write("\tFrom util: move_uci_string = " + move_uci_string)
 
         # input move to board

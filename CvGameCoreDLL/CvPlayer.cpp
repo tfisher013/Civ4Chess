@@ -125,16 +125,6 @@ void CvPlayer::init(PlayerTypes eID)
 
 	changeGold(9999);
 
-	if (isHuman())
-{
-    CvPopupInfo* pInfo = new CvPopupInfo(BUTTONPOPUP_TEXT);
-    if (pInfo != NULL)
-    {
-        pInfo->setText(L"*** DLL is active! :) ***");
-        gDLL->getInterfaceIFace()->addPopup(pInfo, getID());
-    }
-}
-
 	//--------------------------------
 	// Init containers
 	m_plotGroups.init();

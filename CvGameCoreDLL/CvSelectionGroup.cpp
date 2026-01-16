@@ -416,7 +416,7 @@ void CvSelectionGroup::pushMission(MissionTypes eMission, int iData1, int iData2
 	FAssert(getOwnerINLINE() != NO_PLAYER);
 
 	// Civ4Chess: store path start when unit is moving
-	if (eMission == MISSION_MOVE_TO || eMission == MISSION_MOVE_TO_UNIT || eMission == MISSION_ROUTE_TO) {
+	if (eMission == MISSION_MOVE_TO || eMission == MISSION_ROUTE_TO) {
 		pathStartPlot = getHeadUnit()->plot();
 	}
 

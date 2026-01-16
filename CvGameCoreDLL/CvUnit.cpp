@@ -2594,7 +2594,7 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 			}
 
 			// no horizontal movement outside a capture
-			if (!bAttack && (toPlotX - m_iX) > 0) {
+			if (!bAttack && abs(toPlotX - m_iX) > 0) {
 				return false;
 			}
 
@@ -7630,7 +7630,7 @@ int CvUnit::baseMoves() const
 {
 	switch(m_eChessPieceType) {
 		case CHESS_PIECE_PAWN:
-			if(getOwner() == 0 && getY() == 3){
+			if(getOwner() == 0 && getY() == 2){
 				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 			} else if(getOwner() == 1 && getY() == 8) {
 				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());

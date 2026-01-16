@@ -1153,3 +1153,11 @@ void CyGame::doControl(int iControl)
 		m_pGame->doControl((ControlTypes) iControl);
 	}
 }
+
+void CyGame::setChessMove(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	if (m_pGame)
+	{
+		m_pGame->setChessMove(iStartX, iStartY, iEndX, iEndY);
+	}
+}

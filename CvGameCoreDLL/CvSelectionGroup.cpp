@@ -3194,9 +3194,16 @@ bool CvSelectionGroup::groupPathTo(int iX, int iY, int iFlags)
 	bool bEndMove = false;
 	if(pPathPlot == pDestPlot)
 		bEndMove = true;
-    
-	groupMove(pPathPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, bEndMove);
 
+	// Civ4Chess: intercept two square pawn movements and handle as atomic
+	CvUnit* pUnit = getHeadUnit();
+	if (pUnit->getChessPieceType() == CHESS_PIECE_PAWN && abs(pUnit->getY() - iY) == 2)
+	{
+		groupMove(pDestPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, true);
+	} else {
+		groupMove(pPathPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, bEndMove);
+	}
+    
 	return true;
 }
 

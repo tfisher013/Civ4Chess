@@ -2286,7 +2286,15 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 	// Civ4Chess: no stacking friendly units
 	if (!bAttack && pPlot->getNumUnits() > 0)
 	{
-		return false;
+		// must account for knights
+		if (m_eChessPieceType != CHESS_PIECE_KNIGHT)
+		{
+			return false;
+		} 
+		if (movesLeft() == 0)
+		{
+			return false;
+		}
 	}
 
 	// Cannot move around in unrevealed land freely
@@ -2604,12 +2612,20 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 			}
 
 			// limit on forward movement
-			if (m_eOwner == 0 && m_iY != 2 && abs(toPlotY - m_iY) > 1) {
-				return false;
-			} 
-			if (m_eOwner == 1 && m_iY != 7 && abs(toPlotY - m_iY) > 1) {
-				return false;
+			if (m_eOwner == 0 && abs(toPlotY - m_iY) > 1)
+			{
+				if (hasMoved() || m_iY != 2) 
+				{
+					return false;
+				} 
 			}
+
+			if (m_eOwner == 1 && abs(toPlotY - m_iY) > 1)
+			{
+				if (hasMoved() || m_iY != 8) 
+				{
+					return false;
+				}
 
 			// prevent moving through friendly units
 			if (m_eOwner == 0 && m_iY == 2 && toPlotY - m_iY == 2) {
@@ -2635,16 +2651,33 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 
 			break;
 		case CHESS_PIECE_KNIGHT:
-			// enforce only L moves
-			if (abs(toPlotX - m_iX) == 2 && abs(toPlotY - m_iY) == 1) {
+		{
+
+			int dx = abs(toPlotX - m_iX);
+			int dy = abs(toPlotY - m_iY);
+
+			// Block illegal adjacent destination moves
+			// (right-click or Go To destination selection)
+			if (dx <= 1 && dy <= 1 && movesLeft() == baseMoves())
+			{
+				return false;
+			}
+
+			// Allow intermediate adjacent steps during path execution
+			if (dx <= 1 && dy <= 1)
+			{
 				return true;
-			} else if (abs(toPlotX - m_iX) == 1 && abs(toPlotY - m_iY) == 2) {
-				return true;
-			} else {
+			}
+
+			// Final destination must be a legal knight move
+			if (!((dx == 2 && dy == 1) || (dx == 1 && dy == 2)))
+			{
 				return false;
 			}
 
 			break;
+		}
+
 		case CHESS_PIECE_BISHOP:
 			// enforce only diagonal moves
 			if (abs(toPlotX - m_iX) != abs(toPlotY - m_iY)) {
@@ -7630,13 +7663,7 @@ int CvUnit::baseMoves() const
 {
 	switch(m_eChessPieceType) {
 		case CHESS_PIECE_PAWN:
-			if(getOwner() == 0 && getY() == 2){
-				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
-			} else if(getOwner() == 1 && getY() == 8) {
-				return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
-			} else {
-				return 1 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
-			}
+			return 1 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 		case CHESS_PIECE_KNIGHT:
 			return 2 + getExtraMoves() + GET_TEAM(getTeam()).getExtraMoves(getDomainType());
 		case CHESS_PIECE_BISHOP:

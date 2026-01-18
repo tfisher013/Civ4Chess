@@ -2077,6 +2077,20 @@ void CvGame::update()
 					CvUnit* movingUnit = startPlot->getUnitByIndex(0);
 					movingUnit->setXY(m_chessMove.iEndX, m_chessMove.iEndY, true, true, true);
 
+					CyArgsList args;
+					args.add(m_chessMove.iStartX);
+					args.add(m_chessMove.iStartY);
+					args.add(m_chessMove.iEndX);
+					args.add(m_chessMove.iEndY);
+
+					long lResult=0;
+					gDLL->getPythonIFace()->callFunction(
+						"CvEventInterface",
+						"onPathCompleted",
+						args.makeFunctionArgs(),
+						&lResult
+					);
+
 					m_chessMove.iStartX = 0;
 					m_chessMove.iStartY = 0;
 					m_chessMove.iEndX = 0;

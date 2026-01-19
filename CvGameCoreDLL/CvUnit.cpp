@@ -2622,10 +2622,11 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 
 			if (m_eOwner == 1 && abs(toPlotY - m_iY) > 1)
 			{
-				if (hasMoved() || m_iY != 8) 
+				if (hasMoved() || m_iY != 7) 
 				{
 					return false;
 				}
+			}
 
 			// prevent moving through friendly units
 			if (m_eOwner == 0 && m_iY == 2 && toPlotY - m_iY == 2) {

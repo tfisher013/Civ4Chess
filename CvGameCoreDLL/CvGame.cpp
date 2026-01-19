@@ -2068,7 +2068,7 @@ void CvGame::update()
 
 		// Civ4Chess: make AI turn
 		PlayerTypes ePlayer = getActivePlayer();
-		if (m_chessMove.iEndX != 0 && ePlayer != NO_PLAYER)
+		if (m_chessMove.iEndX != 0 && ePlayer != NO_PLAYER && !GET_PLAYER(ePlayer).isHuman())
 		{
 			CvPlayer& kPlayer = GET_PLAYER(ePlayer);
 

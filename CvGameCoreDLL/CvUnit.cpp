@@ -2290,8 +2290,8 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 		if (m_eChessPieceType != CHESS_PIECE_KNIGHT)
 		{
 			return false;
-		} 
-		if (movesLeft() == 0)
+		}
+		if (std::max(abs(getY() - pPlot->getY()), abs(getX() - pPlot->getX())) == movesLeft() / GC.getMOVE_DENOMINATOR())
 		{
 			return false;
 		}

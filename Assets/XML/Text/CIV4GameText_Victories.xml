@@ -1,0 +1,24 @@
+<!--  edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by Alex Mantzaris (Firaxis Games)  -->
+<!--  Sid Meier's Civilization 4  -->
+<!--  Copyright Firaxis Games 2005  -->
+<!--   -->
+<!--  Game Text - New  -->
+<Civ4GameText xmlns="http://www.firaxis.com">
+    <TEXT>
+        <Tag>TXT_KEY_VICTORY_CHECKMATE</Tag>
+        <English>Checkmate</English>
+        <French>Échec et Mat</French>
+        <German>Schachmatt</German>
+        <Italian>Scacco Matto</Italian>
+        <Spanish>Mate</Spanish>
+    </TEXT>
+
+    <TEXT>
+        <Tag>TXT_KEY_VICTORY_PEDIA_CHECKMATE</Tag>
+        <English>A player achieves victory by delivering checkmate to the opposing king. The king is under attack and has no legal moves to escape capture.</English>
+        <French>Un joueur remporte la victoire en infligeant un échec et mat au roi adverse. Le roi est attaqué et n'a aucun coup légal pour échapper à la capture.</French>
+        <German>Ein Spieler erzielt den Sieg, indem er den gegnerischen König schachmatt setzt. Der König wird angegriffen und hat keine legalen Züge, um der Gefangennahme zu entgehen.</German>
+        <Italian>Un giocatore ottiene la vittoria dando scacco matto al re avversario. Il re è sotto attacco e non ha mosse legali per sfuggire alla cattura.</Italian>
+        <Spanish>Un jugador logra la victoria al dar jaque mate al rey contrario. El rey está bajo ataque y no tiene movimientos legales para escapar de la captura.</Spanish>
+    </TEXT>
+</Civ4GameText>

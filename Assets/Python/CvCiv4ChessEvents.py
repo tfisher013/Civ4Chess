@@ -265,8 +265,6 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
             if (movedUnit.getID() != currentUnit.getID()):
                 currentUnit.finishMoves()
 
-        CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
-
     def onUnitKilled(self, argsList):
         "Unit Killed"
         self.parent.onUnitKilled(self, argsList)
@@ -286,8 +284,17 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         self.parent.onBeginGameTurn(self, argsList)
         iGameTurn = argsList[0]
 
-    def onPathCompleted(self, path_endpoints_tuple):
-        path_start_x, path_start_y, path_end_x, path_end_y = path_endpoints_tuple
+    def onPathCompleted(self, argsList):
+        path_start_x, path_start_y, path_end_x, path_end_y = argsList
 
         self.civ_chess_obj.process_move(path_start_x, path_start_y, path_end_x, path_end_y)
         sys.stdout.write("Board FEN: " + str(self.civ_chess_obj.board.board_fen()))
+
+        if self.civ_chess_obj.board.is_checkmate():
+            gc.getGame().setWinner(gc.getGame().getActivePlayer(), 0)
+
+        else:
+            CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
+            CyAudioGame().Play3DSound("AS3D_CHESS_MOVE", path_end_x, path_end_y, 0)
+
+

@@ -554,6 +554,11 @@ void CvSelectionGroup::updateMission()
 			// Civ4Chess: consume remaining movement after completing mission
 			CvUnit* headUnit = getHeadUnit();
 			headUnit->finishMoves();
+			if (headUnit->getOwner() == 0) {
+				headUnit->setFacingDirection(DIRECTION_NORTH);
+			} else {
+				headUnit->setFacingDirection(DIRECTION_SOUTH);
+			}
 
 			// Civ4Chess: alert the Python about a move completion so the board state can be updated
 			FAStarNode* lastPlotNode = getPathLastNode();

@@ -770,12 +770,14 @@ public:
 	virtual void AI_setUnitAIType(UnitAITypes eNewValue) = 0;
     virtual int AI_sacrificeValue(const CvPlot* pPlot) const = 0;
 
+	// Civ4Chess: CvUnit getters/setters
 	DllExport ChessPieceTypes getChessPieceType() const;
 
 protected:
 
 	// Civ4Chess: used to record which piece type this unit is representing
 	ChessPieceTypes m_eChessPieceType;
+	bool m_bDeletePromotedUnit;
 
 	int m_iID;
 	int m_iGroupID;

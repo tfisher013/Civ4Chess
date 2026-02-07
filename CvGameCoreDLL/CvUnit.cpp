@@ -355,6 +355,7 @@ void CvUnit::reset(int iID, UnitTypes eUnit, PlayerTypes eOwner, bool bConstruct
 	m_iCargoCapacity = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->getCargoSpace() : 0;
 
 	m_eChessPieceType = NO_CHESS_PIECE;
+	m_bDeletePromotedUnit = false;
 
 	m_combatUnit.reset();
 	m_transportUnit.reset();
@@ -740,6 +741,10 @@ void CvUnit::doTurn()
 	setReconPlot(NULL);
 
 	setMoves(0);
+
+	if (m_bDeletePromotedUnit) {
+		kill(false);
+	}
 }
 
 
@@ -1443,9 +1448,9 @@ void CvUnit::updateCombat(bool bQuick)
 				GET_TEAM(getTeam()).changeWarWeariness(pDefender->getTeam(), *pPlot, GC.getDefineINT("WW_KILLED_UNIT_ATTACKING"));
 				GET_TEAM(getTeam()).AI_changeWarSuccess(pDefender->getTeam(), GC.getDefineINT("WAR_SUCCESS_ATTACKING"));
 			}
-
 			szBuffer = gDLL->getText("TXT_KEY_MISC_YOU_UNIT_DESTROYED_ENEMY", getNameKey(), pDefender->getNameKey());
-			gDLL->getInterfaceIFace()->addMessage(getOwnerINLINE(), true, GC.getEVENT_MESSAGE_TIME(), szBuffer, GC.getEraInfo(GC.getGameINLINE().getCurrentEra()).getAudioUnitVictoryScript(), MESSAGE_TYPE_INFO, NULL, (ColorTypes)GC.getInfoTypeForString("COLOR_GREEN"), pPlot->getX_INLINE(), pPlot->getY_INLINE());
+			// Civ4Chess: don't report combat results
+			// gDLL->getInterfaceIFace()->addMessage(getOwnerINLINE(), true, GC.getEVENT_MESSAGE_TIME(), szBuffer, GC.getEraInfo(GC.getGameINLINE().getCurrentEra()).getAudioUnitVictoryScript(), MESSAGE_TYPE_INFO, NULL, (ColorTypes)GC.getInfoTypeForString("COLOR_GREEN"), pPlot->getX_INLINE(), pPlot->getY_INLINE());
 			if (getVisualOwner(pDefender->getTeam()) != getOwnerINLINE())
 			{
 				szBuffer = gDLL->getText("TXT_KEY_MISC_YOU_UNIT_WAS_DESTROYED_UNKNOWN", pDefender->getNameKey(), getNameKey());
@@ -1454,7 +1459,8 @@ void CvUnit::updateCombat(bool bQuick)
 			{
 				szBuffer = gDLL->getText("TXT_KEY_MISC_YOU_UNIT_WAS_DESTROYED", pDefender->getNameKey(), getNameKey(), getVisualCivAdjective(pDefender->getTeam()));
 			}
-			gDLL->getInterfaceIFace()->addMessage(pDefender->getOwnerINLINE(), true, GC.getEVENT_MESSAGE_TIME(), szBuffer,GC.getEraInfo(GC.getGameINLINE().getCurrentEra()).getAudioUnitDefeatScript(), MESSAGE_TYPE_INFO, NULL, (ColorTypes)GC.getInfoTypeForString("COLOR_RED"), pPlot->getX_INLINE(), pPlot->getY_INLINE());
+			// Civ4Chess: don't report combat results
+			// gDLL->getInterfaceIFace()->addMessage(pDefender->getOwnerINLINE(), true, GC.getEVENT_MESSAGE_TIME(), szBuffer,GC.getEraInfo(GC.getGameINLINE().getCurrentEra()).getAudioUnitDefeatScript(), MESSAGE_TYPE_INFO, NULL, (ColorTypes)GC.getInfoTypeForString("COLOR_RED"), pPlot->getX_INLINE(), pPlot->getY_INLINE());
 
 			// report event to Python, along with some other key state
 			CvEventReporter::getInstance().combatResult(this, pDefender);
@@ -2763,6 +2769,88 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 
 			break;
 		case CHESS_PIECE_KING:
+			// castling
+			if (m_eOwner == 0)
+			{
+				if (m_iX == 5 && m_iY == 1) 
+				{
+					// queenside check
+					if (
+						!GC.getMapINLINE().plot(4, 1)->isUnit() && 
+						!GC.getMapINLINE().plot(3, 1)->isUnit() &&
+						!GC.getMapINLINE().plot(2, 1)->isUnit() &&
+						GC.getMapINLINE().plot(1, 1)->isUnit()
+					)
+					{
+						if (GC.getMapINLINE().plot(1, 1)->getUnitByIndex(0)->getChessPieceType() == CHESS_PIECE_ROOK &&
+							GC.getMapINLINE().plot(1, 1)->getUnitByIndex(0)->getOwner() == 0
+						)
+						{
+							if (toPlotX == 3 && toPlotY == 1)
+							{
+								return true;
+							}
+						}
+					}
+					// kingside check
+					if (
+						!GC.getMapINLINE().plot(6, 1)->isUnit() && 
+						!GC.getMapINLINE().plot(7, 1)->isUnit() &&
+						GC.getMapINLINE().plot(8, 1)->isUnit()
+					)
+					{
+						if (GC.getMapINLINE().plot(8, 1)->getUnitByIndex(0)->getChessPieceType() == CHESS_PIECE_ROOK &&
+							GC.getMapINLINE().plot(8, 1)->getUnitByIndex(0)->getOwner() == 0
+						)
+						{
+							if (toPlotX == 7 && toPlotY == 1)
+							{
+								return true;
+							}
+						}
+					}
+				}
+			} else {
+				if (m_iX == 5 && m_iY == 8)
+				{
+					// queenside check
+					if (
+						!GC.getMapINLINE().plot(4, 8)->isUnit() && 
+						!GC.getMapINLINE().plot(3, 8)->isUnit() &&
+						!GC.getMapINLINE().plot(2, 8)->isUnit() &&
+						GC.getMapINLINE().plot(1, 1)->isUnit()
+					)
+					{
+						if (GC.getMapINLINE().plot(1, 8)->getUnitByIndex(0)->getChessPieceType() == CHESS_PIECE_ROOK &&
+							GC.getMapINLINE().plot(1, 8)->getUnitByIndex(0)->getOwner() == 1
+						)
+						{
+							if (toPlotX == 3 && toPlotY == 8)
+							{
+								return true;
+							}
+						}
+					}
+					// kingside check
+					if (
+						!GC.getMapINLINE().plot(6, 8)->isUnit() && 
+						!GC.getMapINLINE().plot(7, 8)->isUnit() &&
+						GC.getMapINLINE().plot(8, 8)->isUnit()
+					)
+					{
+						if (GC.getMapINLINE().plot(8, 8)->getUnitByIndex(0)->getChessPieceType() == CHESS_PIECE_ROOK &&
+							GC.getMapINLINE().plot(8, 8)->getUnitByIndex(0)->getOwner() == 1
+						)
+						{
+							if (toPlotX == 7 && toPlotY == 8)
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+
 			if (abs(m_iX - toPlotX) > 1 || abs(m_iY - toPlotY) > 1) {
 				return false;
 			}
@@ -3108,6 +3196,20 @@ void CvUnit::attack(CvPlot* pPlot, bool bQuick)
 	setAttackPlot(pPlot, false);
 
 	updateCombat(bQuick);
+
+	CyArgsList args;
+	args.add(m_iX);
+	args.add(m_iY);
+	args.add(pPlot->getX());
+	args.add(pPlot->getY());
+
+	long lResult=0;
+	gDLL->getPythonIFace()->callFunction(
+		"CvEventInterface",
+		"onPathCompleted",
+		args.makeFunctionArgs(),
+		&lResult
+	);
 }
 
 void CvUnit::fightInterceptor(const CvPlot* pPlot, bool bQuick)
@@ -10230,6 +10332,44 @@ void CvUnit::changeMoves(int iChange)
 void CvUnit::finishMoves()																			
 {
 	setMoves(maxMoves());
+
+	// Civ4Chess: temporarily set up a complicated check here for unusual moves
+
+	// check for castling
+
+	// check for en passant
+
+	// check for promotion
+	if (m_eChessPieceType == CHESS_PIECE_PAWN && !m_bDeletePromotedUnit) {
+		if ((m_eOwner == 0 && m_iY == 8) || (m_eOwner == 1 && m_iY == 1)) {
+			m_bDeletePromotedUnit = true;
+			m_eChessPieceType = NO_CHESS_PIECE;
+
+			gDLL->logMsg("xml.log", "Unit %d from team %d is deleting itself...", m_eChessPieceType, m_eOwner);
+			CvUnit* uQueen = GET_PLAYER(m_eOwner).initUnit((UnitTypes)GC.getInfoTypeForString("UNIT_SPY"), 
+				m_iX, 
+				m_iY, 
+				NO_UNITAI,
+				m_eOwner == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH,
+				CHESS_PIECE_QUEEN
+			);
+			uQueen->setMoves(0);
+
+			CyArgsList args;
+			args.add(m_eOwner == 0 ? m_iY - 1 : m_iY + 1);
+			args.add(m_iY);
+			args.add(m_iX);
+			args.add(m_iY);
+
+			long lResult=0;
+			gDLL->getPythonIFace()->callFunction(
+				"CvEventInterface",
+				"onPathCompleted",
+				args.makeFunctionArgs(),
+				&lResult
+			);
+		}
+	}
 }
 
 
@@ -12859,6 +12999,11 @@ void CvUnit::getDefenderCombatValues(CvUnit& kDefender, const CvPlot* pPlot, int
 	iTheirStrength = kDefender.currCombatStr(pPlot, this, pTheirDetails);
 	int iTheirFirepower = kDefender.currFirepower(pPlot, this);
 
+	// Civ4Chess: attackers always win
+	iOurStrength = 1000;
+	iTheirStrength = 1;
+	iTheirFirepower = 1;
+
 	FAssert((iOurStrength + iTheirStrength) > 0);
 	FAssert((iOurFirepower + iTheirFirepower) > 0);
 
@@ -13254,6 +13399,7 @@ int CvUnit::getSelectionSoundScript() const
 	return iScriptId;
 }
 
+// Civ4Chess
 ChessPieceTypes CvUnit::getChessPieceType() const
 {
 	return m_eChessPieceType;

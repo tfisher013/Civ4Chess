@@ -6,6 +6,50 @@ and need an in-game check._
 
 ---
 
+## 0. Current state and next steps (updated 2026-11-21, end of Phase 1 coding)
+
+**Branches** (all pushed; the maintainer merges PRs, Claude never does): `main` ← `phase0-stabilize` ← `phase1-python-rules` (current).
+
+**Done**
+- Phase 0: token/Stockfish path moved to env vars, bridge engine kept alive, engine-reply crash fixed, castling/promotion/null-pointer
+  bugs fixed, README, `.gitignore`, work committed.
+- Phase 1 (coded, DLL built, **not yet verified in the game**): python-chess is the referee. `CivChessObj.legal_moves_string()` →
+  `CyGame.setLegalMoves` → `CvUnit::canMoveInto` only allows listed moves; pieces skip the pathfinder (`groupPathTo` slides them in one
+  go, or `attack()`s from where they stand); castling rook via `CyGame.slideChessPiece`; en passant victim killed from Python;
+  promotion always a queen; draws end the game with a message; `CHESS-SYNC` log lines compare the python-chess board with the map.
+- 17 out-of-game tests: `C:\Python26\python -B Tests\test_chess_utils.py` (all pass).
+
+**Decisions made by the maintainer (do not re-ask)**
+- Promotion: auto-queen for now (popup later). Draws: message and stop. No save/load/serialization for now: assume a game is
+  finished in one sitting. Keep Civ-style walking/slide animations where feasible (castling may be an exception).
+- Stockfish mode first, Lichess later. No automated play against real/random Lichess players. Lichess testing will be run past the
+  maintainer first, using either a second account they log into or a token + API docs for self-play.
+- One feature branch per phase is enough (not one per task).
+
+**Unverified in-game (check these first)**
+1. A capture from distance: does the attacker animate acceptably, and does it land on the square afterwards?
+2. Castling: rook slides along with the king; black queenside check fixed.
+3. Pawn promotion on a capture (the old promotion callback with wrong coordinates was removed).
+4. En passant removes the right pawn.
+5. Turn flow: how turns advance with two players, and that the other side can move after one side has used its moves.
+6. `ENGINE_OPPONENT_ENABLED` is **False** until Phase 2 (the engine's reply must move Civ units first).
+Look for `CHESS-SYNC OK` / `CHESS-SYNC MISMATCH` in `Logs/PythonDbg.log`, and `xml.log` for DLL messages.
+
+**Testing constraint:** the maintainer's machine (2016 MacBook Air, Boot Camp, integrated graphics) runs Civ4 with severe lag, so
+driving the game through screenshots/clicks is impractical. Prefer out-of-game tests and log-based checks; the maintainer does short
+manual in-game checks and reports `PythonDbg.log` / `xml.log` output.
+
+**Next steps**
+1. Maintainer does a short in-game check of the list above (or we add a log-only replay hook so one launch produces a full report).
+2. Fix what that finds; merge `phase1-python-rules` (maintainer).
+3. Phase 2: engine reply moves Civ units. Add one "opponent" interface (Stockfish now, Lichess later); route engine moves through the
+   same apply-move path as human moves (including promotion, castling rook, en passant); make the HTTP call non-blocking; fix the
+   `CvGame::update` non-human-active-player gating; difficulty/time per move.
+4. Phase 3 (needs maintainer sign-off first): Lichess Board API (seek with time control, challenge by username, move streaming, colors).
+5. Phase 4: UI screens, clocks, polish.
+
+---
+
 ## 1. What the project is
 
 A Civilization IV: Beyond the Sword mod in which two civilizations play chess on an 8×8 region of a 10×10 map. Civ units act as chess

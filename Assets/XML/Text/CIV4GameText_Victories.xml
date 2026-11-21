@@ -14,7 +14,7 @@
     </TEXT>
 
     <TEXT>
-        <Tag>TXT_KEY_VICTORY_PEDIA_CHECKMATE</Tag>
+        <Tag>TXT_KEY_VICTORY_CHECKMATE_PEDIA</Tag>
         <English>A player achieves victory by delivering checkmate to the opposing king. The king is under attack and has no legal moves to escape capture.</English>
         <French>Un joueur remporte la victoire en infligeant un échec et mat au roi adverse. Le roi est attaqué et n'a aucun coup légal pour échapper à la capture.</French>
         <German>Ein Spieler erzielt den Sieg, indem er den gegnerischen König schachmatt setzt. Der König wird angegriffen und hat keine legalen Züge, um der Gefangennahme zu entgehen.</German>

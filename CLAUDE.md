@@ -37,9 +37,15 @@ Data flow: Civ4 engine ↔ DLL ↔ (Boost.Python) mod Python ↔ HTTP `127.0.0.1
 
 ## Build / run
 
-- DLL: open `CvGameCoreDLL/CvGameCoreDLL.sln` (NMake project) → Release, or run `nmake` with the `Makefile` (needs Civ4SDK in
-  `C:\Program Files (x86)\Civ4SDK`: VC++ Toolkit 2003 + WindowsSDK; `YOURMOD=..` copies the DLL to `Assets/`).
-  `build_dll.bat` files exist but are gitignored and not the canonical path. **Ask before building**; Civ4 must be closed to overwrite the DLL.
+- DLL (verified 2026-11-21, takes ~3 min — run with a long timeout). Civ4 must be closed (check for a `Civ*` process first).
+  From PowerShell, in the mod root:
+  ```
+  cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat`" x86 >nul && cd /d CvGameCoreDLL && nmake TARGET=Release clean /NOLOGO && nmake TARGET=Release source_list /NOLOGO && nmake TARGET=Release /NOLOGO"
+  ```
+  VS2010 supplies `nmake`; the compiler is VC++ Toolkit 2003 from `C:\Program Files (x86)\Civ4SDK`. The Makefile copies the result
+  to `Assets/CvGameCoreDLL.dll` (lines `COPY "Release\CvGameCoreDLL.dll" "..\Assets\."` = success). The run then ends with
+  `NMAKE : fatal error U1077: '--objectextension=pch'` — **expected and harmless**: the trailing `fastdep` step has no `FD` set.
+  Treat real `error C`/`LNK` lines, or a missing copy line, as failure. `build_dll.bat` files are gitignored and not used.
 - Bridge: from `BridgeServer/`, activate `.venv`, set `STOCKFISH_PATH` and `LICHESS_TOKEN` env vars, then
   `fastapi dev bridge_server.py --port 8000` (mod expects port 8000). See `README.md`.
 - Test: no automated tests. Verification is manual: launch BtS → Load mod Civ4Chess → play the `Civ4Chess` public map.

@@ -80,6 +80,9 @@ void CvSelectionGroup::reset(int iID, PlayerTypes eOwner, bool bConstructorCall)
 	m_eAutomateType = NO_AUTOMATE;
 	m_bIsBusyCache = false;
 
+	// Civ4Chess: no path in progress yet
+	pathStartPlot = NULL;
+
 	if (!bConstructorCall)
 	{
 		AI_reset();
@@ -553,30 +556,41 @@ void CvSelectionGroup::updateMission()
 
 			// Civ4Chess: consume remaining movement after completing mission
 			CvUnit* headUnit = getHeadUnit();
-			headUnit->finishMoves();
-			if (headUnit->getOwner() == 0) {
-				headUnit->setFacingDirection(DIRECTION_NORTH);
-			} else {
-				headUnit->setFacingDirection(DIRECTION_SOUTH);
+			if (headUnit != NULL)
+			{
+				headUnit->finishMoves();
+				if (headUnit->getOwner() == 0) {
+					headUnit->setFacingDirection(DIRECTION_NORTH);
+				} else {
+					headUnit->setFacingDirection(DIRECTION_SOUTH);
+				}
+
+				// Civ4Chess: alert the Python about a move completion so the board state can be updated
+				// (only when a move mission actually recorded a start plot)
+				FAStarNode* lastPlotNode = getPathLastNode();
+				if (pathStartPlot != NULL && lastPlotNode != NULL)
+				{
+					CvPlot* endPathPlot = GC.getMapINLINE().plotSorenINLINE(lastPlotNode->m_iX, lastPlotNode->m_iY);
+
+					CyArgsList args;
+					args.add(headUnit->getID());
+					args.add(pathStartPlot->getX());
+					args.add(pathStartPlot->getY());
+					args.add(endPathPlot->getX());
+					args.add(endPathPlot->getY());
+
+					// Civ4Chess: clear before calling out so a stale start plot is never reused
+					pathStartPlot = NULL;
+
+					long lResult=0;
+					gDLL->getPythonIFace()->callFunction(
+						"CvEventInterface",
+						"onPathCompleted",
+						args.makeFunctionArgs(),
+						&lResult
+					);
+				}
 			}
-
-			// Civ4Chess: alert the Python about a move completion so the board state can be updated
-			FAStarNode* lastPlotNode = getPathLastNode();
-			CvPlot* endPathPlot = GC.getMapINLINE().plotSorenINLINE(lastPlotNode->m_iX, lastPlotNode->m_iY);
-
-			CyArgsList args;
-			args.add(pathStartPlot->getX());
-			args.add(pathStartPlot->getY());
-			args.add(endPathPlot->getX());
-			args.add(endPathPlot->getY());
-
-			long lResult=0;
-			gDLL->getPythonIFace()->callFunction(
-				"CvEventInterface",
-				"onPathCompleted",
-				args.makeFunctionArgs(),
-				&lResult
-			);
 		}
 	}
 }

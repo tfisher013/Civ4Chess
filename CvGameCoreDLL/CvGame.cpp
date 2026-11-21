@@ -2078,6 +2078,7 @@ void CvGame::update()
 					movingUnit->setXY(m_chessMove.iEndX, m_chessMove.iEndY, true, true, true);
 
 					CyArgsList args;
+					args.add(movingUnit->getID());
 					args.add(m_chessMove.iStartX);
 					args.add(m_chessMove.iStartY);
 					args.add(m_chessMove.iEndX);

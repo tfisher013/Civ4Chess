@@ -744,7 +744,10 @@ void CvUnit::doTurn()
 
 	if (m_bDeletePromotedUnit) {
 		kill(false);
+		setXY(-1, -1, false, false, false);
 	}
+
+	gDLL->logMsg("xml.log", "finishing doTurn()");
 }
 
 
@@ -2818,7 +2821,7 @@ bool CvUnit::canMoveInto(const CvPlot* pPlot, bool bAttack, bool bDeclareWar, bo
 						!GC.getMapINLINE().plot(4, 8)->isUnit() && 
 						!GC.getMapINLINE().plot(3, 8)->isUnit() &&
 						!GC.getMapINLINE().plot(2, 8)->isUnit() &&
-						GC.getMapINLINE().plot(1, 1)->isUnit()
+						GC.getMapINLINE().plot(1, 8)->isUnit()
 					)
 					{
 						if (GC.getMapINLINE().plot(1, 8)->getUnitByIndex(0)->getChessPieceType() == CHESS_PIECE_ROOK &&
@@ -3198,6 +3201,7 @@ void CvUnit::attack(CvPlot* pPlot, bool bQuick)
 	updateCombat(bQuick);
 
 	CyArgsList args;
+	args.add(getID());
 	args.add(m_iX);
 	args.add(m_iY);
 	args.add(pPlot->getX());
@@ -3210,6 +3214,7 @@ void CvUnit::attack(CvPlot* pPlot, bool bQuick)
 		args.makeFunctionArgs(),
 		&lResult
 	);
+
 }
 
 void CvUnit::fightInterceptor(const CvPlot* pPlot, bool bQuick)
@@ -10342,10 +10347,10 @@ void CvUnit::finishMoves()
 	// check for promotion
 	if (m_eChessPieceType == CHESS_PIECE_PAWN && !m_bDeletePromotedUnit) {
 		if ((m_eOwner == 0 && m_iY == 8) || (m_eOwner == 1 && m_iY == 1)) {
+			gDLL->logMsg("xml.log", "Promoting pawn (unit %d) of player %d; pawn will delete itself...", getID(), m_eOwner);
+
 			m_bDeletePromotedUnit = true;
 			m_eChessPieceType = NO_CHESS_PIECE;
-
-			gDLL->logMsg("xml.log", "Unit %d from team %d is deleting itself...", m_eChessPieceType, m_eOwner);
 			CvUnit* uQueen = GET_PLAYER(m_eOwner).initUnit((UnitTypes)GC.getInfoTypeForString("UNIT_SPY"), 
 				m_iX, 
 				m_iY, 
@@ -10356,8 +10361,11 @@ void CvUnit::finishMoves()
 			uQueen->setMoves(0);
 
 			CyArgsList args;
+			// Civ4Chess: (unitId, startX, startY, endX, endY); assumes a straight one-square push.
+			// Python ignores this report if the move was already applied by the move/attack callback.
+			args.add(getID());
+			args.add(m_iX);
 			args.add(m_eOwner == 0 ? m_iY - 1 : m_iY + 1);
-			args.add(m_iY);
 			args.add(m_iX);
 			args.add(m_iY);
 

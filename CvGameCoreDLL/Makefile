@@ -39,7 +39,7 @@ YOURMOD=..
 ## Civ install path
 ## Path to the directory where boost and python is stored
 ## Overwritten by enviroment variable CIV4_LIB_INSTALL_PATH
-CIV4_PATH=$(PROGRAMFILES)\2K Games\Firaxis Games\Sid Meier's Civilization IV Colonization\CvGameCoreDLL
+CIV4_PATH=C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Civ4Chess\CvGameCoreDLL
 
 #### Tools ####
 CC="$(TOOLKIT)\bin\cl.exe"
@@ -48,7 +48,7 @@ LD="$(TOOLKIT)\bin\link.exe"
 RC="$(PSDK)\bin\rc.exe"
 ## Uncomment to build dependencies using fastdep
 ## Overwritten by enviroment variable FASTDEP_FULL_PATH
-FD="bin\fastdep.exe"
+#FD="bin\fastdep.exe"
 
 #### BLACKLIST ####
 ## Uncomment to block CvTextScreen (accidentally included by Firaxis)
@@ -69,7 +69,7 @@ Release_DEFINES=/DWIN32 /D_WINDOWS /D_USRDLL /DCVGAMECOREDLL_EXPORTS /DNDEBUG /D
 
 TEMP_FILE_DIR = temp_files
 CUSTOM_CFLAGS  =
-CUSTOM_LDFLAGS =
+CUSTOM_LDFLAGS = /NODEFAULTLIB:libcmt
 
 
 

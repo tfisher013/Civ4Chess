@@ -20,3 +20,13 @@ CvGameCoreDLL/*.user
 CvGameCoreDLL/*.project
 CvGameCoreDLL/*.inl
 CvGameCoreDLL/*.opensdf
+
+# python venv
+.venv/
+
+# python bytecode and caches
+__pycache__/
+*.pyc
+
+# macOS resource-fork files (e.g. inside vendored simplejson)
+._*

@@ -9,6 +9,7 @@
 #include "CvDeal.h"
 #include "CvRandom.h"
 #include "CvChessTypes.h"
+#include <set>
 
 class CvPlot;
 class CvCity;
@@ -546,6 +547,19 @@ public:
 	// Civ4Chess
 	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
 
+	// Civ4Chess: python-chess is the referee. Python sends the legal moves for the side to
+	// move as space separated UCI strings (e.g. "e2e4 g1f3"); the DLL only allows those moves.
+	void setChessLegalMoves(const char* szMoves);
+	bool isChessMoveLegal(int iStartX, int iStartY, int iEndX, int iEndY) const;
+
+	// Civ4Chess: the move currently being carried out (it stays legal until it completes, even
+	// though Python replaces the legal move table as soon as the move is reported)
+	void setActiveChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
+	void clearActiveChessMove();
+
+	// Civ4Chess: moves a piece without consulting the legal move table (castling rook)
+	void slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY);
+
 protected:
 	int m_iElapsedGameTurns;
 	int m_iStartTurn;
@@ -692,6 +706,12 @@ protected:
 
 	// Civ4Chess: CvGame stores AI chess move
 	ChessMove m_chessMove;
+
+	// Civ4Chess: legal moves from Python, encoded by chessMoveKey()
+	std::set<int> m_chessLegalMoves;
+	bool m_bChessActiveMove;
+	ChessMove m_chessActiveMove;
+	static int chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY);
 };
 
 #endif

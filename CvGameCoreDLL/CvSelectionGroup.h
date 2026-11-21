@@ -227,6 +227,10 @@ protected:
 
 	// Civ4Chess: stores the first plot in a path
 	CvPlot* pathStartPlot;
+
+	// Civ4Chess: destination of the move mission in progress (valid while pathStartPlot is set)
+	int m_iChessPathEndX;
+	int m_iChessPathEndY;
 };
 
 #endif

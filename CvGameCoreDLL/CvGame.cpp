@@ -112,6 +112,8 @@ void CvGame::init(HandicapTypes eHandicap)
 	m_chessMove.iStartY = 0;
 	m_chessMove.iEndX = 0;
 	m_chessMove.iEndY = 0;
+	m_bChessActiveMove = false;
+	m_chessLegalMoves.clear();
 
 	// Turn off all MP options if it's a single player game
 	if (GC.getInitCore().getType() == GAME_SP_NEW ||
@@ -418,6 +420,10 @@ void CvGame::reset(HandicapTypes eHandicap, bool bConstructorCall)
 	//--------------------------------
 	// Uninit class
 	uninit();
+
+	// Civ4Chess
+	m_bChessActiveMove = false;
+	m_chessLegalMoves.clear();
 
 	m_iElapsedGameTurns = 0;
 	m_iStartTurn = 0;
@@ -9087,3 +9093,95 @@ void CvGame::setChessMove(int iStartX, int iStartY, int iEndX, int iEndY)
 	m_chessMove.iEndY = iEndY;
 }
 
+
+// Civ4Chess: a move is encoded as ((startX * 10 + startY) * 100) + endX * 10 + endY (coordinates are 1..8)
+int CvGame::chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	return ((iStartX * 10 + iStartY) * 100) + (iEndX * 10 + iEndY);
+}
+
+// Civ4Chess: replaces the legal move table. szMoves holds space separated UCI moves such as
+// "e2e4 g1f3 e7e8q"; a promotion suffix is ignored because only the squares matter here.
+void CvGame::setChessLegalMoves(const char* szMoves)
+{
+	m_chessLegalMoves.clear();
+
+	if (szMoves == NULL)
+	{
+		return;
+	}
+
+	const char* p = szMoves;
+	while (*p != '\0')
+	{
+		if (*p == ' ')
+		{
+			p++;
+			continue;
+		}
+
+		// a UCI move is at least four characters: file, rank, file, rank
+		if (p[0] >= 'a' && p[0] <= 'h' && p[1] >= '1' && p[1] <= '8' &&
+			p[2] >= 'a' && p[2] <= 'h' && p[3] >= '1' && p[3] <= '8')
+		{
+			m_chessLegalMoves.insert(chessMoveKey(p[0] - 'a' + 1, p[1] - '0', p[2] - 'a' + 1, p[3] - '0'));
+		}
+
+		// skip to the end of this token
+		while (*p != '\0' && *p != ' ')
+		{
+			p++;
+		}
+	}
+
+	gDLL->logMsg("xml.log", "Civ4Chess: %d legal moves loaded", (int)m_chessLegalMoves.size());
+}
+
+bool CvGame::isChessMoveLegal(int iStartX, int iStartY, int iEndX, int iEndY) const
+{
+	if (m_bChessActiveMove &&
+		m_chessActiveMove.iStartX == iStartX && m_chessActiveMove.iStartY == iStartY &&
+		m_chessActiveMove.iEndX == iEndX && m_chessActiveMove.iEndY == iEndY)
+	{
+		return true;
+	}
+
+	return m_chessLegalMoves.find(chessMoveKey(iStartX, iStartY, iEndX, iEndY)) != m_chessLegalMoves.end();
+}
+
+void CvGame::setActiveChessMove(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	m_bChessActiveMove = true;
+	m_chessActiveMove.iStartX = iStartX;
+	m_chessActiveMove.iStartY = iStartY;
+	m_chessActiveMove.iEndX = iEndX;
+	m_chessActiveMove.iEndY = iEndY;
+}
+
+void CvGame::clearActiveChessMove()
+{
+	m_bChessActiveMove = false;
+}
+
+// Civ4Chess: slides the piece standing on the start plot to the end plot with the normal move
+// animation, ignoring the legal move table. Used for the rook when castling.
+void CvGame::slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	CvPlot* pStartPlot = GC.getMapINLINE().plotINLINE(iStartX, iStartY);
+	CvPlot* pEndPlot = GC.getMapINLINE().plotINLINE(iEndX, iEndY);
+	if (pStartPlot == NULL || pEndPlot == NULL || !pStartPlot->isUnit() || pEndPlot->isUnit())
+	{
+		char szMessage[128];
+		sprintf(szMessage, "Civ4Chess: slideChessPiece(%d,%d -> %d,%d) ignored", iStartX, iStartY, iEndX, iEndY);
+		gDLL->logMsg("xml.log", szMessage);
+		return;
+	}
+
+	CvUnit* pUnit = pStartPlot->getUnitByIndex(0);
+
+	// give the unit movement so that the move is carried out, then use it up again
+	pUnit->setMoves(0);
+	pUnit->move(pEndPlot, true);
+	pUnit->ExecuteMove(((float)(GC.getMissionInfo(MISSION_MOVE_TO).getTime() * gDLL->getMillisecsPerTurn())) / 1000.0f, false);
+	pUnit->finishMoves();
+}

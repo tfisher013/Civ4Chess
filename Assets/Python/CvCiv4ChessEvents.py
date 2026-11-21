@@ -19,7 +19,7 @@ localText = CyTranslator()
 
 # When True, each human move is answered by a Stockfish move from the bridge server
 # (applied to the python-chess board only, see onPathCompleted).
-ENGINE_OPPONENT_ENABLED = True
+ENGINE_OPPONENT_ENABLED = False
 
 
 def face_unit_to_direction(pUnit, iDesiredDir):
@@ -272,10 +272,6 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         self.parent.__init__(self)
         self.civ_chess_obj = CivChessObj()
 
-        self.unit_id_map = {}
-        self.unit_id_map[0] = set()
-        self.unit_id_map[1] = set()
-
     def onGameStart(self, argsList):
         "Called at the start of the game"
         self.parent.onGameStart(self, argsList)
@@ -287,6 +283,8 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         gc.getTeam(0).declareWar(1, True, WarPlanTypes.NO_WARPLAN)
         gc.getTeam(1).declareWar(0, True, WarPlanTypes.NO_WARPLAN)
 
+        # tell the DLL which moves White may play first
+        self.sendLegalMoves()
 
         CyInterface().addImmediateMessage("Let's play chess", "")
 
@@ -310,72 +308,129 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         self.parent.onBeginGameTurn(self, argsList)
         iGameTurn = argsList[0]
 
-
+    def sendLegalMoves(self):
+        """Gives the DLL the legal moves for the side to move; it refuses every other move."""
+        gc.getGame().setLegalMoves(self.civ_chess_obj.legal_moves_string())
 
     def onPathCompleted(self, argsList):
+        """
+        Called by the DLL when a piece has made a move (and when a capture starts). python-chess
+        decides whether the move is legal; the DLL only lets legal moves through, so a move
+        that is rejected here is a duplicate report of one that was already applied.
+        """
         moved_unit_id, path_start_x, path_start_y, path_end_x, path_end_y = argsList
 
-        sys.stdout.write("Entering onPathCompleted")
+        chess_obj = self.civ_chess_obj
+        mover = 0
+        if chess_obj.board.turn == chess.BLACK:
+            mover = 1
 
-        iActivePlayer = gc.getGame().getActivePlayer()
-        pPlayer = gc.getPlayer(iActivePlayer)
-        for iUnit in range(pPlayer.getNumUnits()):
-            iUnitId = pPlayer.getUnit(iUnit).getID()
-            if iUnitId >= 0:
-                self.unit_id_map[iActivePlayer].add(iUnitId)
-
-        for iUnitId in self.unit_id_map[iActivePlayer]:
-            pPlayer.getUnit(iUnitId).finishMoves()
-
-        # if iActivePlayer == 0:
-        #     face_unit_to_direction(pPlayer.getUnit(moved_unit_id), 0)
-        # else:
-        #     face_unit_to_direction(pPlayer.getUnit(moved_unit_id), 4)
-
-        status = self.civ_chess_obj.process_move(path_start_x, path_start_y, path_end_x, path_end_y)
+        status = chess_obj.process_move(path_start_x, path_start_y, path_end_x, path_end_y)
         if status == GAME_STATUS_IGNORED:
-            # duplicate or out-of-sync report from the DLL; nothing more to do
+            # duplicate report from the DLL; the move was already applied
             return 0
 
-        board = self.civ_chess_obj.board
-        sys.stdout.write("Board FEN: " + str(board.board_fen()))
-        sys.stdout.write("Game id is " + str(ChessGameState.getGameID()))
+        # one move per turn: use up the movement of every piece of the side that just moved
+        for pUnit in PyPlayer(mover).getUnitList():
+            pUnit.finishMoves()
 
-        if self.checkForCheckmate():
+        # castling: the rook goes along with the king
+        if chess_obj.last_rook_move is not None:
+            rook_from, rook_to = chess_obj.last_rook_move
+            gc.getGame().slideChessPiece(rook_from[0], rook_from[1], rook_to[0], rook_to[1])
+
+        # en passant: the captured pawn is not on the destination square
+        if chess_obj.last_en_passant_victim is not None:
+            victim_x, victim_y = chess_obj.last_en_passant_victim
+            pVictimPlot = gc.getMap().plot(victim_x, victim_y)
+            if pVictimPlot.getNumUnits() > 0:
+                pVictimPlot.getUnit(0).kill(False, PlayerTypes.NO_PLAYER)
+
+        # from now on only the moves that are legal in the new position are allowed
+        self.sendLegalMoves()
+        self.logBoardState("after " + str(chess_obj.last_move))
+
+        if self.handleGameEnd(status):
             return 0
 
         CyInterface().addImmediateMessage("Unit moved... Turn over.", "")
         CyAudioGame().Play3DSound("AS3D_CHESS_MOVE", path_end_x, path_end_y, 0)
 
-        # WIP: ask the engine for a reply. The reply is only applied to the
-        # python-chess board; moving the Civ unit (CyGame.setChessMove) is not wired yet.
+        # WIP: ask the engine for a reply (applied to the python-chess board only; moving the
+        # Civ unit is Phase 2 work, so this stays off until then)
         if ENGINE_OPPONENT_ENABLED:
-            engine_move = make_engine_move(board.fen())
+            engine_move = make_engine_move(chess_obj.board.fen())
             if engine_move is None:
-                sys.stdout.write("No engine move available (is the bridge server running?)")
+                sys.stdout.write("No engine move available (is the bridge server running?)\n")
             else:
-                sys.stdout.write("Engine made a move: " + str(engine_move))
-                board.push_uci(engine_move)
-                self.checkForCheckmate()
+                status = chess_obj.push_uci_move(engine_move)
+                self.sendLegalMoves()
+                self.handleGameEnd(status)
 
         return 0
 
-    def checkForCheckmate(self):
-        """Declares the winner if the side to move is checkmated. Returns True on checkmate."""
+    def handleGameEnd(self, status):
+        """Shows the result of a finished game. Returns True if the game is over."""
         board = self.civ_chess_obj.board
-        if not board.is_checkmate():
-            return False
 
-        # player 0 plays White, player 1 plays Black; the side to move is the one mated
-        if board.turn == chess.WHITE:
-            iWinner = 1
+        if status == GAME_STATUS_CHECKMATE:
+            # player 0 plays White, player 1 plays Black; the side to move is the one mated
+            if board.turn == chess.WHITE:
+                iWinner = 1
+            else:
+                iWinner = 0
+            gc.getGame().setWinner(gc.getPlayer(iWinner).getTeam(), gc.getInfoTypeForString("VICTORY_CHECKMATE"))
+            return True
+
+        if status == GAME_STATUS_STALEMATE:
+            CyInterface().addImmediateMessage("Stalemate - the game is a draw.", "")
+            return True
+
+        if status == GAME_STATUS_DRAW:
+            CyInterface().addImmediateMessage("The game is a draw.", "")
+            return True
+
+        return False
+
+    def logBoardState(self, tag):
+        """
+        Debug aid: logs the python-chess position and compares it with the pieces that are
+        really on the map, so a desync between the two shows up in PythonDbg.log.
+        """
+        board = self.civ_chess_obj.board
+        # python-chess piece types (pawn..king = 1..6) for each ChessPieceTypes value
+        civ_to_chess = {
+            ChessPieceTypes.CHESS_PIECE_PAWN: chess.PAWN,
+            ChessPieceTypes.CHESS_PIECE_ROOK: chess.ROOK,
+            ChessPieceTypes.CHESS_PIECE_KNIGHT: chess.KNIGHT,
+            ChessPieceTypes.CHESS_PIECE_BISHOP: chess.BISHOP,
+            ChessPieceTypes.CHESS_PIECE_QUEEN: chess.QUEEN,
+            ChessPieceTypes.CHESS_PIECE_KING: chess.KING,
+        }
+
+        problems = []
+        for x in range(1, 9):
+            for y in range(1, 9):
+                square = chess.square(x - 1, y - 1)
+                expected = board.piece_at(square)
+
+                found = None
+                pPlot = gc.getMap().plot(x, y)
+                for i in range(pPlot.getNumUnits()):
+                    pUnit = pPlot.getUnit(i)
+                    if civ_to_chess.has_key(pUnit.getChessPieceType()):
+                        found = (civ_to_chess[pUnit.getChessPieceType()], pUnit.getOwner() == 0)
+
+                if expected is None:
+                    if found is not None:
+                        problems.append(chess.SQUARE_NAMES[square] + ": board empty, map has a piece")
+                elif found is None:
+                    problems.append(chess.SQUARE_NAMES[square] + ": board has " + expected.symbol() + ", map is empty")
+                elif found != (expected.piece_type, expected.color):
+                    problems.append(chess.SQUARE_NAMES[square] + ": board has " + expected.symbol() + ", map has a different piece")
+
+        sys.stdout.write("CHESS-SYNC [" + tag + "] fen=" + board.fen() + "\n")
+        if len(problems) == 0:
+            sys.stdout.write("CHESS-SYNC OK\n")
         else:
-            iWinner = 0
-        gc.getGame().setWinner(gc.getPlayer(iWinner).getTeam(), gc.getInfoTypeForString("VICTORY_CHECKMATE"))
-        return True
-
-
-
-
-
-
+            sys.stdout.write("CHESS-SYNC MISMATCH: " + "; ".join(problems) + "\n")

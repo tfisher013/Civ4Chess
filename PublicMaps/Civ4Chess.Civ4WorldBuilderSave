@@ -104,7 +104,7 @@ BeginPlayer
 	PlayableCiv=1
 	MinorNationStatus=0
 	StartingGold=0
-	StartingX=15, StartingY=7
+	StartingX=4, StartingY=4
 	StateReligion=
 	StartingEra=ERA_ANCIENT
 	CivicOption=CIVICOPTION_GOVERNMENT, Civic=CIVIC_DESPOTISM
@@ -129,7 +129,7 @@ BeginPlayer
 	PlayableCiv=1
 	MinorNationStatus=0
 	StartingGold=0
-	StartingX=25, StartingY=9
+	StartingX=5, StartingY=5
 	StateReligion=
 	StartingEra=ERA_ANCIENT
 	CivicOption=CIVICOPTION_GOVERNMENT, Civic=CIVIC_DESPOTISM

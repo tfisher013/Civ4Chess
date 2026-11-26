@@ -565,6 +565,11 @@ public:
 	int getChessPathEndX() const { return m_iChessPathEndX; }
 	int getChessPathEndY() const { return m_iChessPathEndY; }
 
+	// Civ4Chess: the Civ player who plays White (set from Python once the colour is chosen);
+	// the other player plays Black. White's pieces face north, Black's face south.
+	void setChessWhitePlayer(PlayerTypes ePlayer) { m_eChessWhitePlayer = ePlayer; }
+	PlayerTypes getChessWhitePlayer() const { return m_eChessWhitePlayer; }
+
 protected:
 	int m_iElapsedGameTurns;
 	int m_iStartTurn;
@@ -722,6 +727,7 @@ protected:
 	void clearChessLegalMoves();
 	bool m_bChessActiveMove;
 	ChessMove m_chessActiveMove;
+	PlayerTypes m_eChessWhitePlayer;
 	static int chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY);
 };
 

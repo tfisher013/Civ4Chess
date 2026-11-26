@@ -227,6 +227,8 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         if self.white_player is not None:
             return
         self.white_player = white_player
+        # the DLL turns a piece to face the opponent after each move
+        gc.getGame().setChessWhitePlayer(white_player)
 
         setupPieces(white_player)
 

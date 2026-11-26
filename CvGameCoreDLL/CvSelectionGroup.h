@@ -228,9 +228,8 @@ protected:
 	// Civ4Chess: stores the first plot in a path
 	CvPlot* pathStartPlot;
 
-	// Civ4Chess: destination of the move mission in progress (valid while pathStartPlot is set)
-	int m_iChessPathEndX;
-	int m_iChessPathEndY;
+	// Civ4Chess: do NOT add more members to this class. Two extra ints here crashed the game at
+	// the main menu (the exe depends on the class layout). Keep chess state in CvGame instead.
 };
 
 #endif

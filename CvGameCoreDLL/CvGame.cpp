@@ -113,7 +113,7 @@ void CvGame::init(HandicapTypes eHandicap)
 	m_chessMove.iEndX = 0;
 	m_chessMove.iEndY = 0;
 	m_bChessActiveMove = false;
-	m_chessLegalMoves.clear();
+	clearChessLegalMoves();
 
 	// Turn off all MP options if it's a single player game
 	if (GC.getInitCore().getType() == GAME_SP_NEW ||
@@ -423,7 +423,9 @@ void CvGame::reset(HandicapTypes eHandicap, bool bConstructorCall)
 
 	// Civ4Chess
 	m_bChessActiveMove = false;
-	m_chessLegalMoves.clear();
+	clearChessLegalMoves();
+	m_iChessPathEndX = -1;
+	m_iChessPathEndY = -1;
 
 	m_iElapsedGameTurns = 0;
 	m_iStartTurn = 0;
@@ -9102,9 +9104,18 @@ int CvGame::chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY)
 
 // Civ4Chess: replaces the legal move table. szMoves holds space separated UCI moves such as
 // "e2e4 g1f3 e7e8q"; a promotion suffix is ignored because only the squares matter here.
+void CvGame::clearChessLegalMoves()
+{
+	for (int i = 0; i < CHESS_MOVE_KEY_COUNT; i++)
+	{
+		m_abChessLegalMoves[i] = false;
+	}
+	m_iNumChessLegalMoves = 0;
+}
+
 void CvGame::setChessLegalMoves(const char* szMoves)
 {
-	m_chessLegalMoves.clear();
+	clearChessLegalMoves();
 
 	if (szMoves == NULL)
 	{
@@ -9124,7 +9135,12 @@ void CvGame::setChessLegalMoves(const char* szMoves)
 		if (p[0] >= 'a' && p[0] <= 'h' && p[1] >= '1' && p[1] <= '8' &&
 			p[2] >= 'a' && p[2] <= 'h' && p[3] >= '1' && p[3] <= '8')
 		{
-			m_chessLegalMoves.insert(chessMoveKey(p[0] - 'a' + 1, p[1] - '0', p[2] - 'a' + 1, p[3] - '0'));
+			int iKey = chessMoveKey(p[0] - 'a' + 1, p[1] - '0', p[2] - 'a' + 1, p[3] - '0');
+			if (!m_abChessLegalMoves[iKey])
+			{
+				m_abChessLegalMoves[iKey] = true;
+				m_iNumChessLegalMoves++;
+			}
 		}
 
 		// skip to the end of this token
@@ -9134,7 +9150,10 @@ void CvGame::setChessLegalMoves(const char* szMoves)
 		}
 	}
 
-	gDLL->logMsg("xml.log", "Civ4Chess: %d legal moves loaded", (int)m_chessLegalMoves.size());
+	// logMsg takes no format arguments, so format the message first
+	char szMessage[64];
+	sprintf(szMessage, "Civ4Chess: %d legal moves loaded", m_iNumChessLegalMoves);
+	gDLL->logMsg("xml.log", szMessage);
 }
 
 bool CvGame::isChessMoveLegal(int iStartX, int iStartY, int iEndX, int iEndY) const
@@ -9146,7 +9165,12 @@ bool CvGame::isChessMoveLegal(int iStartX, int iStartY, int iEndX, int iEndY) co
 		return true;
 	}
 
-	return m_chessLegalMoves.find(chessMoveKey(iStartX, iStartY, iEndX, iEndY)) != m_chessLegalMoves.end();
+	if (iStartX < 1 || iStartX > 8 || iStartY < 1 || iStartY > 8 || iEndX < 1 || iEndX > 8 || iEndY < 1 || iEndY > 8)
+	{
+		return false;
+	}
+
+	return m_abChessLegalMoves[chessMoveKey(iStartX, iStartY, iEndX, iEndY)];
 }
 
 void CvGame::setActiveChessMove(int iStartX, int iStartY, int iEndX, int iEndY)

@@ -82,8 +82,6 @@ void CvSelectionGroup::reset(int iID, PlayerTypes eOwner, bool bConstructorCall)
 
 	// Civ4Chess: no path in progress yet
 	pathStartPlot = NULL;
-	m_iChessPathEndX = -1;
-	m_iChessPathEndY = -1;
 
 	if (!bConstructorCall)
 	{
@@ -423,8 +421,7 @@ void CvSelectionGroup::pushMission(MissionTypes eMission, int iData1, int iData2
 	// Civ4Chess: store path start when unit is moving
 	if (eMission == MISSION_MOVE_TO || eMission == MISSION_ROUTE_TO) {
 		pathStartPlot = getHeadUnit()->plot();
-		m_iChessPathEndX = iData1;
-		m_iChessPathEndY = iData2;
+		GC.getGameINLINE().setChessPathEnd(iData1, iData2);
 	}
 
 	if (!bAppend)
@@ -573,7 +570,7 @@ void CvSelectionGroup::updateMission()
 				// Only report once the piece really stands on the destination: this block also runs
 				// while a move or capture is still in progress, and a cancelled mission must not
 				// be reported as a move.
-				CvPlot* endPathPlot = GC.getMapINLINE().plotINLINE(m_iChessPathEndX, m_iChessPathEndY);
+				CvPlot* endPathPlot = GC.getMapINLINE().plotINLINE(GC.getGameINLINE().getChessPathEndX(), GC.getGameINLINE().getChessPathEndY());
 				if (pathStartPlot != NULL && endPathPlot != NULL && headUnit->at(endPathPlot->getX_INLINE(), endPathPlot->getY_INLINE()))
 				{
 					CyArgsList args;

@@ -124,7 +124,16 @@ def showEspionageAdvisor():
 	if (-1 != CyGame().getActivePlayer()):
 		espionageAdvisor.interfaceScreen()
 
-dawnOfMan = CvDawnOfMan.CvDawnOfMan(DAWN_OF_MAN)
+# Civ4Chess: the map's starting plots lie off the board on purpose (a starting plot on the
+# board gets Civ's free settler/worker/scout units), so the camera starts out looking at
+# nothing. Point it at the board when the Dawn of Man screen closes.
+class Civ4ChessDawnOfMan(CvDawnOfMan.CvDawnOfMan):
+	def onClose(self):
+		CvDawnOfMan.CvDawnOfMan.onClose(self)
+		CyCamera().JustLookAtPlot(CyMap().plot(4, 4))
+		return 0
+
+dawnOfMan = Civ4ChessDawnOfMan(DAWN_OF_MAN)
 def showDawnOfMan(argsList):
 	dawnOfMan.interfaceScreen()
 	

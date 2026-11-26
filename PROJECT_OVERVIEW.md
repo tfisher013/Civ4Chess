@@ -8,8 +8,10 @@ and need an in-game check._
 
 ## 0. Current state and next steps (updated 2026-11-26, Phase 2 working in game)
 
-**Branches** (all pushed; the maintainer merges PRs, Claude never does): `main` ← `phase0-stabilize` ← `phase1-python-rules`
-← `phase2-engine` (current). No PRs opened yet.
+**Branches** (the maintainer merges PRs, Claude never does): `main` is untouched since Feb 2026. All Claude-assisted work
+(Phases 0–2) lives on **`claude-assisted`**, which branches off `main`. New work goes on one feature branch off `claude-assisted`,
+with a PR back into it. The old `phase0-stabilize` / `phase1-python-rules` / `phase2-engine` branches were rolled up into it
+(PR #1: phase2 → phase1; then phase1 → `claude-assisted`).
 
 **2026-11-26 update (supersedes the Phase 1 notes below where they differ)**
 - Phase 1 crashed Civ4 at the main menu: extra fields in `CvSelectionGroup` break the exe. Fixed by keeping that state in `CvGame`

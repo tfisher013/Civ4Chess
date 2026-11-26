@@ -17,7 +17,10 @@ and need an in-game check._
 - Phase 2 (`phase2-engine`): Stockfish plays Black. Verified in game: a full game to checkmate (36 moves) with captures by both
   sides, long-range human captures, en passant by White; CHESS-SYNC OK throughout. Also fixed `CvUnit::attack` reporting the
   attacker's start square after a quick combat had already moved it (showed up as `d4d4`).
-- Still unverified in game: castling (either side), promotion, draws. Out-of-game tests: 24, all pass.
+- Also verified in game: White kingside castling (rook follows, CHESS-SYNC OK); en passant by White (5.exd6 in the first
+  Stockfish game).
+- Still unverified in game: queenside castling, castling by Stockfish, en passant by Stockfish, promotion, draws.
+  Out-of-game tests: 24, all pass.
 - In-game testing by Claude works (launch/menu checks are scripted), but Civ4 does not receive Claude's right-clicks, so the
   maintainer plays the moves and Claude reads `PythonDbg.log`.
 - Remaining Phase 2 items: engine HTTP call still blocks the game for ~1 s per reply; difficulty setting; colour choice

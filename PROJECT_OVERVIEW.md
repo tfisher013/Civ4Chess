@@ -25,8 +25,15 @@ with a PR back into it. The old `phase0-stabilize` / `phase1-python-rules` / `ph
   Out-of-game tests: 24, all pass.
 - In-game testing by Claude works (launch/menu checks are scripted), but Civ4 does not receive Claude's right-clicks, so the
   maintainer plays the moves and Claude reads `PythonDbg.log`.
-- Remaining Phase 2 items: engine HTTP call still blocks the game for ~1 s per reply; difficulty setting; colour choice
-  (human is always White); the old `CvGame::update`/`setChessMove` AI path is now unused.
+- Remaining Phase 2 items: engine HTTP call still blocks the game for ~1 s per reply; difficulty setting; the old
+  `CvGame::update`/`setChessMove` AI path is now unused.
+
+**2026-11-26 colour choice (`choose-colour`, verified in game)**
+- A White/Black/Random popup opens when Dawn of Man closes; pieces are placed after the choice. The human stays Civ player 0 and
+  Stockfish player 1; `CvGame::m_eChessWhitePlayer` (set via `CyGame.setChessWhitePlayer`) says which one is White. As Black the
+  camera turns 180° and Stockfish moves first. Pieces face the opponent by colour after a move; promotion goes by rank.
+- Fixed: a new game started from the main menu kept the previous game's python-chess board and colour (the event manager lives
+  for the whole session); `resetGameState()` now runs in `onGameStart`.
 
 **2026-11-26 quality-of-life fixes (`qol-camera-endscreens`, verified in game)**
 - The camera now looks at the board when the Dawn of Man screen closes (`CvScreensInterface.Civ4ChessDawnOfMan`); no more
@@ -197,7 +204,8 @@ had a hard-coded test call `setChessMove(5,7,5,5)` in `onEndGameTurn`).
 ### Representation
 - **Board state:** two copies — physical Civ units on plots (DLL) and a python-chess `Board` held in the `CvCiv4ChessEvents` instance
   (Python). They are synced only by `onPathCompleted` callbacks; no reconciliation exists.
-- **Players/colors:** Civ player 0 = White (ranks 1–2), player 1 = Black (ranks 7–8); hard-coded in DLL (`m_eOwner == 0`) and Python.
+- **Players/colors:** White is on ranks 1–2, Black on ranks 7–8. Human = Civ player 0, Stockfish = player 1; which one is White is
+  chosen at game start (`white_player` in Python, `CvGame::getChessWhitePlayer` in the DLL).
 - **Identity:** Lichess identity = whoever owns the hard-coded token in the bridge. No user accounts/config in the mod.
 - **Game id:** `ChessGameState.lichessGameID` (module global, not persisted).
 
@@ -277,7 +285,6 @@ Hypotheses needing an in-game check:
 Technical debt:
 - Hard-coded absolute paths (`sys.path.append(...)` in two Python files, Makefile `CIV4_PATH`, Stockfish path).
 - Duplicate rook/queen/bishop slide logic in `canMoveInto`; large copy of `canMoveInto` pasted into `canMoveThrough`.
-- Color logic hard-coded as player 0/1 throughout DLL and Python.
 - Debug output everywhere (`sys.stdout.write`, `xml.log` on every `doTurn`).
 - `.gitignore` ignores `*.bat` (build scripts never tracked); `simplejson/` contains `._*` and `.pyc` files; `__pycache__` not ignored.
 - No tests; no README content.

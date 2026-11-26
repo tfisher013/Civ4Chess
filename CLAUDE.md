@@ -26,15 +26,20 @@ Data flow: Civ4 engine ↔ DLL ↔ (Boost.Python) mod Python ↔ HTTP `127.0.0.1
   only allows moves on that list (`CvGame::isChessMoveLegal`). A move in progress stays allowed via `setActiveChessMove` until it completes.
   Chess pieces skip the pathfinder: `CvSelectionGroup::groupPathTo` slides them to the destination in one go (or attacks from where they stand).
   Python applies castling (`CyGame.slideChessPiece` for the rook) and en passant (kills the victim) after `process_move`. Promotion is always a queen.
-- **Stockfish plays Black** (`ENGINE_OPPONENT_ENABLED` in `CvCiv4ChessEvents.py`): after a human move the reply is queued and played
+- **Stockfish is the opponent** (`ENGINE_OPPONENT_ENABLED` in `CvCiv4ChessEvents.py`): after a human move the reply is queued and played
   from `onGameUpdate` once the human piece stands on its square (a capture is reported when the attack starts). `playEngineReply`
-  removes the captured piece, `slideChessPiece`s the mover, then gives White's units their moves back (no Civ end-turn needed).
+  removes the captured piece, `slideChessPiece`s the mover, then gives the human's units their moves back (no Civ end-turn needed).
+- **Colour choice:** closing Dawn of Man opens a White/Black/Random popup (`showColourChoice`); `startChessGame(white_player)` then
+  places the pieces, calls `CyGame.setChessWhitePlayer` (the DLL faces pieces by colour after a move), turns the camera for Black,
+  and queues Stockfish's first move if it plays White. Map Civ player ↔ colour only through `playerOfColour` / `white_player`.
+- The event manager lives for the whole Civ4 session, not one game: per-game state goes in `resetGameState()` (called from `onGameStart`).
 - Bridge: `POST /engine-move`, `POST /challenge/{username}`, `GET /challenge`, `GET /account/playing`.
 
 ## Key conventions
 
 - Board = map plots x,y in **1..8** on a 10×10 map (border of 0/9). x 1..8 → files a..h, y → rank directly.
-- Player 0 starts on ranks 1–2 (python-chess WHITE); player 1 on ranks 7–8. (`setupPieces` comments say the opposite — comments are wrong.)
+- The human is always Civ player 0 and Stockfish player 1; either can play White. White is always on ranks 1–2 (python-chess WHITE),
+  Black on ranks 7–8, so board coordinates never depend on the colour choice. Promotion in the DLL goes by rank (8 or 1).
 - A piece's chess role is `CvUnit::m_eChessPieceType` (`ChessPieceTypes` enum in `CvEnums.h`, exposed to Python), set via the
   extra 6th arg of `CyPlayer.initUnit(...)`. Unit art is cosmetic: Warrior=pawn, Axeman=rook, Chariot=knight, Archer=bishop, Spy=queen, Prophet=king.
 - All DLL edits are marked with a `// Civ4Chess:` comment. Keep doing this — it is the only way to tell mod code from stock Firaxis code.

@@ -7998,41 +7998,9 @@ void CvGame::showEndGameSequence()
 				}
 			}
 
-			// show replay
-			pInfo = new CvPopupInfo(BUTTONPOPUP_PYTHON_SCREEN);
-			if (NULL != pInfo)
-			{
-				pInfo->setText(L"showReplay"); 
-				pInfo->setData1(iI);
-				pInfo->setOption1(false); // don't go to HOF on exit
-				player.addPopup(pInfo);
-			}
-
-			// show top cities / stats
-			pInfo = new CvPopupInfo(BUTTONPOPUP_PYTHON_SCREEN);
-			if (NULL != pInfo)
-			{
-				pInfo->setText(L"showInfoScreen");
-				pInfo->setData1(0);
-				pInfo->setData2(1);
-				player.addPopup(pInfo);
-			}
-
-			// show Dan
-			pInfo = new CvPopupInfo(BUTTONPOPUP_PYTHON_SCREEN);
-			if (NULL != pInfo)
-			{
-				pInfo->setText(L"showDanQuayleScreen");
-				player.addPopup(pInfo);
-			}
-
-			// show Hall of Fame
-			pInfo = new CvPopupInfo(BUTTONPOPUP_PYTHON_SCREEN);
-			if (NULL != pInfo)
-			{
-				pInfo->setText(L"showHallOfFame");
-				player.addPopup(pInfo);
-			}
+			// Civ4Chess: no replay, top cities/stats, Dan Quayle or Hall of Fame screens after a
+			// chess game; only the result popup above and the "one more turn / exit" popup
+			// queued by setGameState are shown.
 		}
 	}
 }

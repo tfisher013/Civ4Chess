@@ -28,6 +28,13 @@ with a PR back into it. The old `phase0-stabilize` / `phase1-python-rules` / `ph
 - Remaining Phase 2 items: engine HTTP call still blocks the game for ~1 s per reply; difficulty setting; colour choice
   (human is always White); the old `CvGame::update`/`setChessMove` AI path is now unused.
 
+**2026-11-26 quality-of-life fixes (`qol-camera-endscreens`, verified in game)**
+- The camera now looks at the board when the Dawn of Man screen closes (`CvScreensInterface.Civ4ChessDawnOfMan`); no more
+  clicking the minimap. The map's starting plots stay off the board on purpose: on the board, Civ places its free
+  settler/worker/scout units there.
+- After a game ends only the result popup and the "one more turn / exit" popup appear; `CvGame::showEndGameSequence` no longer
+  queues the replay, top cities/stats, Dan Quayle and Hall of Fame screens.
+
 **Done**
 - Phase 0: token/Stockfish path moved to env vars, bridge engine kept alive, engine-reply crash fixed, castling/promotion/null-pointer
   bugs fixed, README, `.gitignore`, work committed.

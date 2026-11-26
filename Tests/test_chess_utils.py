@@ -201,5 +201,57 @@ class RandomGameTests(QuietTestCase):
                 self.assertEqual(obj.board.fen(), reference.fen())
 
 
+class EngineMoveTests(QuietTestCase):
+    """push_uci_move applies Stockfish's replies; the event handler mirrors them on the map
+    from last_move_coords / last_capture_coords / last_rook_move."""
+
+    def test_quiet_move_reports_squares_and_no_capture(self):
+        obj = CivChessObj()
+        play(obj, "e2e4")
+        self.assertEqual(obj.push_uci_move("e7e5"), GAME_STATUS_IN_PROGRESS)
+        self.assertEqual(obj.last_move_coords, ((5, 7), (5, 5)))
+        self.assertEqual(obj.last_capture_coords, None)
+
+    def test_capture_reports_captured_square(self):
+        obj = with_fen("4k3/8/8/3p4/4P3/8/8/4K3 b - - 0 1")
+        self.assertEqual(obj.push_uci_move("d5e4"), GAME_STATUS_IN_PROGRESS)
+        self.assertEqual(obj.last_move_coords, ((4, 5), (5, 4)))
+        self.assertEqual(obj.last_capture_coords, (5, 4))
+
+    def test_en_passant_capture_square_is_the_victim(self):
+        obj = with_fen("4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 1")
+        self.assertEqual(obj.push_uci_move("d4e3"), GAME_STATUS_IN_PROGRESS)
+        self.assertEqual(obj.last_move_coords, ((4, 4), (5, 3)))
+        self.assertEqual(obj.last_capture_coords, (5, 4))
+
+    def test_castling_reports_rook_and_no_capture(self):
+        obj = with_fen("r3k3/8/8/8/8/8/8/4K3 b q - 0 1")
+        self.assertEqual(obj.push_uci_move("e8c8"), GAME_STATUS_IN_PROGRESS)
+        self.assertEqual(obj.last_rook_move, ((1, 8), (4, 8)))
+        self.assertEqual(obj.last_capture_coords, None)
+
+    def test_underpromotion_becomes_a_queen(self):
+        obj = with_fen("4k3/8/8/8/8/8/p7/4K3 b - - 0 1")
+        self.assertEqual(obj.push_uci_move("a2a1n"), GAME_STATUS_IN_PROGRESS)
+        piece = obj.board.piece_at(chess.A1)
+        self.assertEqual(piece.piece_type, chess.QUEEN)
+
+    def test_illegal_or_garbage_move_is_ignored(self):
+        obj = CivChessObj()
+        fen = obj.board.fen()
+        self.assertEqual(obj.push_uci_move("e2e5"), GAME_STATUS_IGNORED)
+        self.assertEqual(obj.push_uci_move("zz"), GAME_STATUS_IGNORED)
+        self.assertEqual(obj.board.fen(), fen)
+
+    def test_engine_checkmate(self):
+        # fool's mate: Black mates with Qh4#
+        obj = CivChessObj()
+        play(obj, "f2f3")
+        obj.push_uci_move("e7e5")
+        play(obj, "g2g4")
+        self.assertEqual(obj.push_uci_move("d8h4"), GAME_STATUS_CHECKMATE)
+        self.assertEqual(obj.legal_moves_string(), "")
+
+
 if __name__ == "__main__":
     unittest.main()

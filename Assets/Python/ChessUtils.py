@@ -1,4 +1,5 @@
 import sys
+import socket
 import chess
 import urllib
 
@@ -13,6 +14,7 @@ GAME_STATUS_IGNORED = 3
 GAME_STATUS_DRAW = 4  # insufficient material, fifty-move rule or threefold repetition
 
 BRIDGE_URL = "http://127.0.0.1:8000"
+ENGINE_TIMEOUT_MARGIN = 5.0  # seconds allowed on top of the engine's thinking time
 
 
 def convert_x_coord_to_file(x_coord):
@@ -71,6 +73,8 @@ class CivChessObj:
         self.last_was_en_passant = False
         self.last_rook_move = None  # ((from_x, from_y), (to_x, to_y)) when castling
         self.last_en_passant_victim = None  # (x, y) of the captured pawn
+        self.last_move_coords = None  # ((from_x, from_y), (to_x, to_y)) of the moving piece
+        self.last_capture_coords = None  # (x, y) of the captured piece (en passant included)
 
     def get_status(self):
         """Returns the GAME_STATUS_* code for the current position."""
@@ -160,6 +164,13 @@ class CivChessObj:
         self.last_was_en_passant = self.board.is_en_passant(move)
         self.last_rook_move = None
         self.last_en_passant_victim = None
+        self.last_move_coords = (
+            square_to_map_coords(move.from_square),
+            square_to_map_coords(move.to_square),
+        )
+        self.last_capture_coords = None
+        if self.board.piece_at(move.to_square) is not None:
+            self.last_capture_coords = square_to_map_coords(move.to_square)
 
         rank = chess.square_rank(move.from_square)
         if self.last_was_castling:
@@ -176,13 +187,20 @@ class CivChessObj:
             # the captured pawn sits beside the capturing pawn's origin, on the destination file
             victim = chess.square(chess.square_file(move.to_square), rank)
             self.last_en_passant_victim = square_to_map_coords(victim)
+            self.last_capture_coords = self.last_en_passant_victim
 
     def push_uci_move(self, uci):
         """
         Applies a move given in UCI notation (e.g. from the engine). Returns the
         GAME_STATUS_* code, or GAME_STATUS_IGNORED if the move is not legal.
         """
-        move = chess.Move.from_uci(uci)
+        try:
+            move = chess.Move.from_uci(uci)
+        except ValueError:
+            return GAME_STATUS_IGNORED
+        # the DLL always promotes to a queen, so an engine underpromotion becomes a queen too
+        if move.promotion is not None and move.promotion != chess.QUEEN:
+            move = chess.Move(move.from_square, move.to_square, chess.QUEEN)
         if self.game_over or not self.board.is_legal(move):
             return GAME_STATUS_IGNORED
         self._record_special_moves(move)
@@ -207,14 +225,20 @@ def make_engine_move(fen, time_limit=1.0):
         "time_limit": time_limit,
     }
     body = urllib.urlencode(params)
+    # urllib in Python 2.4 has no per-call timeout; without one a hung bridge would freeze the game
+    old_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(time_limit + ENGINE_TIMEOUT_MARGIN)
     try:
-        response = urllib.urlopen(BRIDGE_URL + "/engine-move", body)
-        result = json.loads(response.read())
-    except Exception, e:
-        sys.stdout.write("make_engine_move failed: " + str(e))
-        return None
+        try:
+            response = urllib.urlopen(BRIDGE_URL + "/engine-move", body)
+            result = json.loads(response.read())
+        except Exception, e:
+            sys.stdout.write("make_engine_move failed: " + str(e) + "\n")
+            return None
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
-    sys.stdout.write("make_engine_move response: " + str(result))
+    sys.stdout.write("make_engine_move response: " + str(result) + "\n")
     if not isinstance(result, dict) or not result.has_key("uci"):
         return None
     return result["uci"]

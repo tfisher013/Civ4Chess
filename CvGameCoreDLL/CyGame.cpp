@@ -1186,3 +1186,12 @@ void CyGame::setChessWhitePlayer(int iPlayer)
 		m_pGame->setChessWhitePlayer((PlayerTypes)iPlayer);
 	}
 }
+
+// Civ4Chess
+void CyGame::setChessQueenUnit(int iUnit)
+{
+	if (m_pGame)
+	{
+		m_pGame->setChessQueenUnit((UnitTypes)iUnit);
+	}
+}

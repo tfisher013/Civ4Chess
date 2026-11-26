@@ -570,6 +570,10 @@ public:
 	void setChessWhitePlayer(PlayerTypes ePlayer) { m_eChessWhitePlayer = ePlayer; }
 	PlayerTypes getChessWhitePlayer() const { return m_eChessWhitePlayer; }
 
+	// Civ4Chess: unit type of a queen in the chosen piece set (used when a pawn promotes)
+	void setChessQueenUnit(UnitTypes eUnit) { m_eChessQueenUnit = eUnit; }
+	UnitTypes getChessQueenUnit() const { return m_eChessQueenUnit; }
+
 protected:
 	int m_iElapsedGameTurns;
 	int m_iStartTurn;
@@ -728,6 +732,7 @@ protected:
 	bool m_bChessActiveMove;
 	ChessMove m_chessActiveMove;
 	PlayerTypes m_eChessWhitePlayer;
+	UnitTypes m_eChessQueenUnit;
 	static int chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY);
 };
 

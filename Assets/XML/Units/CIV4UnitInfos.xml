@@ -20310,8 +20310,8 @@
 			<Special>NONE</Special>
 			<Capture>NONE</Capture>
 			<Combat>NONE</Combat>
-			<Domain>DOMAIN_IMMOBILE</Domain>
-			<DefaultUnitAI>UNITAI_ICBM</DefaultUnitAI>
+			<Domain>DOMAIN_LAND</Domain>
+			<DefaultUnitAI>UNITAI_ATTACK</DefaultUnitAI>
 			<Invisible>NONE</Invisible>
 			<SeeInvisible>NONE</SeeInvisible>
 			<Description>TXT_KEY_UNIT_ICBM</Description>
@@ -20360,7 +20360,7 @@
 			<FlankingStrikes/>
 			<UnitAIs>
 				<UnitAI>
-					<UnitAIType>UNITAI_ICBM</UnitAIType>
+					<UnitAIType>UNITAI_ATTACK</UnitAIType>
 					<bUnitAI>1</bUnitAI>
 				</UnitAI>
 			</UnitAIs>
@@ -20398,7 +20398,7 @@
 			<iAirRange>0</iAirRange>
 			<iAirUnitCap>0</iAirUnitCap>
 			<iDropRange>0</iDropRange>
-			<iNukeRange>1</iNukeRange>
+			<iNukeRange>-1</iNukeRange>
 			<iWorkRate>0</iWorkRate>
 			<iBaseDiscover>0</iBaseDiscover>
 			<iDiscoverMultiplier>0</iDiscoverMultiplier>

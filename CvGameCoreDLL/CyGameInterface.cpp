@@ -267,6 +267,7 @@ void CyGamePythonInterface()
 		.def("setLegalMoves", &CyGame::setLegalMoves, "void (string szMoves) - space separated UCI moves the side to move may play")
 		.def("slideChessPiece", &CyGame::slideChessPiece, "void (int iStartX, int iStartY, int iEndX, int iEndY) - moves a piece ignoring the legal move table (castling rook)")
 		.def("setChessWhitePlayer", &CyGame::setChessWhitePlayer, "void (int iPlayer) - Civ4Chess: the player who plays White")
+		.def("setChessQueenUnit", &CyGame::setChessQueenUnit, "void (int iUnit) - Civ4Chess: unit type a promoted pawn becomes")
 		;
 
 	python::class_<CyDeal>("CyDeal")

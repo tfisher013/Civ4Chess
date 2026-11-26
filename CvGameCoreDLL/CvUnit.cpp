@@ -8487,6 +8487,12 @@ float CvUnit::airCurrCombatStrFloat(const CvUnit* pOther) const
 
 int CvUnit::combatLimit() const
 {
+	// Civ4Chess: a capture must always take the piece. Siege units (artillery, trebuchet) have a
+	// combat limit below 100, which would leave the captured piece alive.
+	if (m_eChessPieceType != NO_CHESS_PIECE)
+	{
+		return GC.getMAX_HIT_POINTS();
+	}
 	return m_pUnitInfo->getCombatLimit();
 }
 
@@ -10087,7 +10093,13 @@ void CvUnit::finishMoves()
 
 			m_bDeletePromotedUnit = true;
 			m_eChessPieceType = NO_CHESS_PIECE;
-			CvUnit* uQueen = GET_PLAYER(m_eOwner).initUnit((UnitTypes)GC.getInfoTypeForString("UNIT_SPY"), 
+			// Civ4Chess: the queen's unit type depends on the piece set
+			UnitTypes eQueenUnit = GC.getGameINLINE().getChessQueenUnit();
+			if (eQueenUnit == NO_UNIT)
+			{
+				eQueenUnit = (UnitTypes)GC.getInfoTypeForString("UNIT_SPY");
+			}
+			CvUnit* uQueen = GET_PLAYER(m_eOwner).initUnit(eQueenUnit,
 				m_iX, 
 				m_iY, 
 				NO_UNITAI,

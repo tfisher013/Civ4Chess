@@ -23,8 +23,9 @@ localText = CyTranslator()
 ENGINE_OPPONENT_ENABLED = True
 HUMAN_PLAYER = 0
 ENGINE_PLAYER = 1
-# popup context id of the colour choice (the stock events use 4999..5012)
+# popup context ids of the game setup popups (the stock events use 4999..5012)
 EVENT_CHOOSE_COLOUR = 7001
+EVENT_CHOOSE_PIECE_SET = 7002
 COLOUR_BUTTON_WHITE = 0
 COLOUR_BUTTON_BLACK = 1
 COLOUR_BUTTON_RANDOM = 2
@@ -59,42 +60,58 @@ def face_unit_to_direction(pUnit, iDesiredDir):
             pUnit.rotateFacingDirectionCounterClockwise()
 
 
-# define piecesets
-def getPieceSet(piece_set_key="ANCIENT"):
+# Piece sets: which Civ unit plays each chess piece. Both sides use the same set. The unit is only
+# art; a piece's chess role comes from its ChessPieceTypes value. Units used here must be land
+# units that can attack (see Assets/XML/Units/CIV4UnitInfos.xml).
+PIECE_SETS = {
+    "ANCIENT": {
+        "PAWN": "UNIT_WARRIOR",
+        "KNIGHT": "UNIT_CHARIOT",
+        "BISHOP": "UNIT_ARCHER",
+        "ROOK": "UNIT_AXEMAN",
+        "QUEEN": "UNIT_SPY",
+        "KING": "UNIT_PROPHET",
+    },
+    "MEDIEVAL": {
+        "PAWN": "UNIT_PIKEMAN",
+        "KNIGHT": "UNIT_KNIGHT",
+        "BISHOP": "UNIT_LONGBOWMAN",
+        "ROOK": "UNIT_TREBUCHET",
+        "QUEEN": "UNIT_MACEMAN",
+        "KING": "UNIT_EXPLORER",
+    },
+    "MODERN": {
+        "PAWN": "UNIT_INFANTRY",
+        "KNIGHT": "UNIT_GUNSHIP",
+        "BISHOP": "UNIT_ARTILLERY",
+        "ROOK": "UNIT_TANK",
+        "QUEEN": "UNIT_MODERN_ARMOR",
+        "KING": "UNIT_ICBM",
+    },
+}
+# order of the buttons in the piece set popup, with their labels
+PIECE_SET_CHOICES = [("ANCIENT", "Ancient"), ("MEDIEVAL", "Medieval"), ("MODERN", "Modern")]
+DEFAULT_PIECE_SET = "ANCIENT"
+
+
+def getPieceSet(piece_set_key=DEFAULT_PIECE_SET):
     """
-    Returns the pieceset dictionary indicated by the provided key
-
-    Args:
-        piece_set_key: the key to which pieceset dictionary to use
-
-    Returns:
-        a pieceset dictionary
+    Returns {piece name: unit type number} for the piece set with the given key. Falls back to
+    the default set if the key is unknown or one of its units does not exist.
     """
+    if not PIECE_SETS.has_key(piece_set_key):
+        sys.stdout.write("Unknown piece set " + str(piece_set_key) + "; using " + DEFAULT_PIECE_SET + "\n")
+        piece_set_key = DEFAULT_PIECE_SET
 
-    PIECE_SETS = {
-        "ANCIENT": {
-            "PAWN": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_WARRIOR"
-            ),
-            "ROOK": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_AXEMAN"
-            ),
-            "KNIGHT": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_CHARIOT"
-            ),
-            "BISHOP": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_ARCHER"
-            ),
-            "QUEEN": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_SPY"
-            ),
-            "KING": CvUtil.findInfoTypeNum(
-                gc.getUnitInfo, gc.getNumUnitInfos(), "UNIT_PROPHET"
-            ),
-        }
-    }
-
-    return PIECE_SETS[piece_set_key]
+    piece_set = {}
+    for piece_name, unit_type in PIECE_SETS[piece_set_key].items():
+        iUnit = gc.getInfoTypeForString(unit_type)
+        if iUnit < 0:
+            sys.stdout.write("Piece set " + piece_set_key + ": no unit " + unit_type + "\n")
+            if piece_set_key != DEFAULT_PIECE_SET:
+                return getPieceSet(DEFAULT_PIECE_SET)
+        piece_set[piece_name] = iUnit
+    return piece_set
 
 
 # pieces on the back rank, files a..h
@@ -113,13 +130,13 @@ def getChessPieceType(piece_name):
     }[piece_name]
 
 
-def setupPieces(white_player, piece_set_key="ANCIENT"):
+def setupPieces(white_player, piece_set):
     """
     Sets up the pieces on the board. White (ranks 1-2, facing north) belongs to Civ player
-    white_player, Black (ranks 7-8, facing south) to the other player.
+    white_player, Black (ranks 7-8, facing south) to the other player. piece_set comes from
+    getPieceSet.
     """
 
-    piece_set = getPieceSet(piece_set_key)
     black_player = 1 - white_player
 
     sides = (
@@ -159,10 +176,12 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         # the camera's base turn before it was ever turned for Black (kept across games)
         self.default_camera_turn = None
 
+        self.Events[EVENT_CHOOSE_PIECE_SET] = ('ChoosePieceSet', self.applyChoosePieceSet, self.beginChoosePieceSet)
         self.Events[EVENT_CHOOSE_COLOUR] = ('ChooseColour', self.applyChooseColour, self.beginChooseColour)
-        # no "DEBUG Event" message on screen for this popup
-        if EVENT_CHOOSE_COLOUR not in CvUtil.SilentEvents:
-            CvUtil.SilentEvents.append(EVENT_CHOOSE_COLOUR)
+        # no "DEBUG Event" message on screen for these popups
+        for iEvent in (EVENT_CHOOSE_PIECE_SET, EVENT_CHOOSE_COLOUR):
+            if iEvent not in CvUtil.SilentEvents:
+                CvUtil.SilentEvents.append(iEvent)
 
     def resetGameState(self):
         """
@@ -179,6 +198,8 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         # Civ player who plays White; None until the colour has been chosen
         self.white_player = None
+        # key into PIECE_SETS, chosen in the first setup popup
+        self.piece_set_key = DEFAULT_PIECE_SET
 
     def onGameStart(self, argsList):
         "Called at the start of the game"
@@ -190,13 +211,31 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         gc.getTeam(0).declareWar(1, True, WarPlanTypes.NO_WARPLAN)
         gc.getTeam(1).declareWar(0, True, WarPlanTypes.NO_WARPLAN)
 
-        # The pieces are placed once the human has chosen a colour: the popup opens when the
-        # Dawn of Man screen closes (CvScreensInterface.Civ4ChessDawnOfMan).
+        # The pieces are placed once the human has chosen a piece set and a colour: the popups
+        # open when the Dawn of Man screen closes (CvScreensInterface.Civ4ChessDawnOfMan).
 
-    def showColourChoice(self):
-        """Asks the human which colour to play, unless the pieces are already on the board."""
+    def showGameSetup(self):
+        """Opens the setup popups (piece set, then colour), unless the pieces are already placed."""
         if self.white_player is None:
-            self.beginEvent(EVENT_CHOOSE_COLOUR)
+            self.beginEvent(EVENT_CHOOSE_PIECE_SET)
+
+    def beginChoosePieceSet(self, argsList):
+        popup = PyPopup.PyPopup(EVENT_CHOOSE_PIECE_SET, EventContextTypes.EVENTCONTEXT_ALL)
+        popup.setHeaderString("Choose your pieces")
+        popup.setBodyString("Both sides play with the same set.")
+        # the button order is the order of PIECE_SET_CHOICES
+        for piece_set_key, label in PIECE_SET_CHOICES:
+            popup.addButton(label)
+        popup.launch(False)
+
+    def applyChoosePieceSet(self, playerID, userData, popupReturn):
+        iButton = popupReturn.getButtonClicked()
+        if iButton >= 0 and iButton < len(PIECE_SET_CHOICES):
+            self.piece_set_key = PIECE_SET_CHOICES[iButton][0]
+        else:
+            # the popup was closed without a choice
+            self.piece_set_key = DEFAULT_PIECE_SET
+        self.beginEvent(EVENT_CHOOSE_COLOUR)
 
     def beginChooseColour(self, argsList):
         popup = PyPopup.PyPopup(EVENT_CHOOSE_COLOUR, EventContextTypes.EVENTCONTEXT_ALL)
@@ -230,7 +269,10 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         # the DLL turns a piece to face the opponent after each move
         gc.getGame().setChessWhitePlayer(white_player)
 
-        setupPieces(white_player)
+        piece_set = getPieceSet(self.piece_set_key)
+        # a promoted pawn becomes this set's queen
+        gc.getGame().setChessQueenUnit(piece_set["QUEEN"])
+        setupPieces(white_player, piece_set)
 
         # tell the DLL which moves White may play first
         self.sendLegalMoves()

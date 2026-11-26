@@ -18,11 +18,16 @@ gc = CyGlobalContext()
 localText = CyTranslator()
 
 # When True, each human move is answered by a Stockfish move from the bridge server
-# (BridgeServer/bridge_server.py must be running on port 8000). The human plays White
-# (player 0) and Stockfish plays Black (player 1).
+# (BridgeServer/bridge_server.py must be running on port 8000). The human is Civ player 0
+# and Stockfish is player 1; which of them plays White is chosen in a popup at game start.
 ENGINE_OPPONENT_ENABLED = True
 HUMAN_PLAYER = 0
 ENGINE_PLAYER = 1
+# popup context id of the colour choice (the stock events use 4999..5012)
+EVENT_CHOOSE_COLOUR = 7001
+COLOUR_BUTTON_WHITE = 0
+COLOUR_BUTTON_BLACK = 1
+COLOUR_BUTTON_RANDOM = 2
 ENGINE_THINK_SECONDS = 1.0
 # game updates to wait for the human's move to finish before the engine replies anyway
 ENGINE_REPLY_MAX_WAIT = 300
@@ -92,182 +97,55 @@ def getPieceSet(piece_set_key="ANCIENT"):
     return PIECE_SETS[piece_set_key]
 
 
-def setupPieces(piece_set_key="ANCIENT"):
-    """Sets up the pieces on the board"""
+# pieces on the back rank, files a..h
+BACK_RANK = ["ROOK", "KNIGHT", "BISHOP", "QUEEN", "KING", "BISHOP", "KNIGHT", "ROOK"]
+
+
+def getChessPieceType(piece_name):
+    """Returns the ChessPieceTypes value for a piece name such as "ROOK"."""
+    return {
+        "PAWN": ChessPieceTypes.CHESS_PIECE_PAWN,
+        "ROOK": ChessPieceTypes.CHESS_PIECE_ROOK,
+        "KNIGHT": ChessPieceTypes.CHESS_PIECE_KNIGHT,
+        "BISHOP": ChessPieceTypes.CHESS_PIECE_BISHOP,
+        "QUEEN": ChessPieceTypes.CHESS_PIECE_QUEEN,
+        "KING": ChessPieceTypes.CHESS_PIECE_KING,
+    }[piece_name]
+
+
+def setupPieces(white_player, piece_set_key="ANCIENT"):
+    """
+    Sets up the pieces on the board. White (ranks 1-2, facing north) belongs to Civ player
+    white_player, Black (ranks 7-8, facing south) to the other player.
+    """
 
     piece_set = getPieceSet(piece_set_key)
+    black_player = 1 - white_player
 
-    # set up white pieces
-    iActivePlayer = 1
-
-    # pawns
-    for iX in range(1, 9):
-        gc.getPlayer(iActivePlayer).initUnit(
-            piece_set["PAWN"],
-            iX,
-            7,
-            UnitAITypes.NO_UNITAI,
-            DirectionTypes.DIRECTION_SOUTH,
-            ChessPieceTypes.CHESS_PIECE_PAWN,
-        )
-
-    # rooks
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["ROOK"],
-        1,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_ROOK,
+    sides = (
+        (white_player, 2, 1, DirectionTypes.DIRECTION_NORTH),
+        (black_player, 7, 8, DirectionTypes.DIRECTION_SOUTH),
     )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["ROOK"],
-        8,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_ROOK,
-    )
-
-    # knights
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KNIGHT"],
-        2,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_KNIGHT,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KNIGHT"],
-        7,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_KNIGHT,
-    )
-
-    # bishops
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["BISHOP"],
-        3,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_BISHOP,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["BISHOP"],
-        6,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_BISHOP,
-    )
-
-    # king and queen
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["QUEEN"],
-        4,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_QUEEN,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KING"],
-        5,
-        8,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_SOUTH,
-        ChessPieceTypes.CHESS_PIECE_KING,
-    )
-
-    # set up black pieces
-    iActivePlayer = 0
-
-    # pawns
-    for iX in range(1, 9):
-        gc.getPlayer(iActivePlayer).initUnit(
-            piece_set["PAWN"],
-            iX,
-            2,
-            UnitAITypes.NO_UNITAI,
-            DirectionTypes.DIRECTION_NORTH,
-            ChessPieceTypes.CHESS_PIECE_PAWN,
-        )
-
-    # rooks
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["ROOK"],
-        1,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_ROOK,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["ROOK"],
-        8,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_ROOK,
-    )
-
-    # knights
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KNIGHT"],
-        2,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_KNIGHT,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KNIGHT"],
-        7,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_KNIGHT,
-    )
-
-    # bishops
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["BISHOP"],
-        3,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_BISHOP,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["BISHOP"],
-        6,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_BISHOP,
-    )
-
-    # king and queen
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["QUEEN"],
-        4,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_QUEEN,
-    )
-    gc.getPlayer(iActivePlayer).initUnit(
-        piece_set["KING"],
-        5,
-        1,
-        UnitAITypes.NO_UNITAI,
-        DirectionTypes.DIRECTION_NORTH,
-        ChessPieceTypes.CHESS_PIECE_KING,
-    )
+    for iPlayer, iPawnRank, iBackRank, eFacing in sides:
+        pPlayer = gc.getPlayer(iPlayer)
+        for iX in range(1, 9):
+            pPlayer.initUnit(
+                piece_set["PAWN"],
+                iX,
+                iPawnRank,
+                UnitAITypes.NO_UNITAI,
+                eFacing,
+                ChessPieceTypes.CHESS_PIECE_PAWN,
+            )
+            piece_name = BACK_RANK[iX - 1]
+            pPlayer.initUnit(
+                piece_set[piece_name],
+                iX,
+                iBackRank,
+                UnitAITypes.NO_UNITAI,
+                eFacing,
+                getChessPieceType(piece_name),
+            )
 
 
 class CvCiv4ChessEvents(CvEventManager.CvEventManager):
@@ -276,27 +154,119 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         self.parent = CvEventManager.CvEventManager
         self.parent.__init__(self)
+        self.resetGameState()
+
+        # the camera's base turn before it was ever turned for Black (kept across games)
+        self.default_camera_turn = None
+
+        self.Events[EVENT_CHOOSE_COLOUR] = ('ChooseColour', self.applyChooseColour, self.beginChooseColour)
+        # no "DEBUG Event" message on screen for this popup
+        if EVENT_CHOOSE_COLOUR not in CvUtil.SilentEvents:
+            CvUtil.SilentEvents.append(EVENT_CHOOSE_COLOUR)
+
+    def resetGameState(self):
+        """
+        Clears everything that belongs to one game. Civ4 creates this event manager once per
+        session, not once per game, so a new game started from the main menu must reset it.
+        """
         self.civ_chess_obj = CivChessObj()
 
         # square (x, y) of a human move that the engine still has to answer, see onGameUpdate
         self.engine_reply_square = None
         self.engine_reply_wait = 0
+        # True when the engine plays White and still has to make the first move
+        self.engine_first_move_pending = False
+
+        # Civ player who plays White; None until the colour has been chosen
+        self.white_player = None
 
     def onGameStart(self, argsList):
         "Called at the start of the game"
+        # before the parent call, which opens the Dawn of Man screen
+        self.resetGameState()
         self.parent.onGameStart(self, argsList)
-
-        # set up the board
-        setupPieces()
 
         # ensure sides are at war
         gc.getTeam(0).declareWar(1, True, WarPlanTypes.NO_WARPLAN)
         gc.getTeam(1).declareWar(0, True, WarPlanTypes.NO_WARPLAN)
 
+        # The pieces are placed once the human has chosen a colour: the popup opens when the
+        # Dawn of Man screen closes (CvScreensInterface.Civ4ChessDawnOfMan).
+
+    def showColourChoice(self):
+        """Asks the human which colour to play, unless the pieces are already on the board."""
+        if self.white_player is None:
+            self.beginEvent(EVENT_CHOOSE_COLOUR)
+
+    def beginChooseColour(self, argsList):
+        popup = PyPopup.PyPopup(EVENT_CHOOSE_COLOUR, EventContextTypes.EVENTCONTEXT_ALL)
+        popup.setHeaderString("Choose your colour")
+        popup.setBodyString("Stockfish plays the other side. White moves first.")
+        # the button order must match the COLOUR_BUTTON_* values
+        popup.addButton("White")
+        popup.addButton("Black")
+        popup.addButton("Random")
+        popup.launch(False)
+
+    def applyChooseColour(self, playerID, userData, popupReturn):
+        iButton = popupReturn.getButtonClicked()
+        if iButton == COLOUR_BUTTON_RANDOM:
+            if gc.getGame().getSorenRandNum(2, "Civ4Chess colour") == 0:
+                iButton = COLOUR_BUTTON_WHITE
+            else:
+                iButton = COLOUR_BUTTON_BLACK
+
+        if iButton == COLOUR_BUTTON_BLACK:
+            self.startChessGame(ENGINE_PLAYER)
+        else:
+            # White, or the popup was closed without a choice
+            self.startChessGame(HUMAN_PLAYER)
+
+    def startChessGame(self, white_player):
+        """Places the pieces with Civ player white_player as White and starts the game."""
+        if self.white_player is not None:
+            return
+        self.white_player = white_player
+        # the DLL turns a piece to face the opponent after each move
+        gc.getGame().setChessWhitePlayer(white_player)
+
+        setupPieces(white_player)
+
         # tell the DLL which moves White may play first
         self.sendLegalMoves()
+        self.lookAtBoard()
 
-        CyInterface().addImmediateMessage("Let's play chess", "")
+        if self.isHumanWhite():
+            CyInterface().addImmediateMessage("Let's play chess - you play White", "")
+        else:
+            CyInterface().addImmediateMessage("Let's play chess - you play Black", "")
+            if ENGINE_OPPONENT_ENABLED:
+                # played from onGameUpdate, so the board is drawn before the engine thinks
+                self.engine_first_move_pending = True
+
+    def isHumanWhite(self):
+        return self.white_player == HUMAN_PLAYER
+
+    def playerOfColour(self, colour):
+        """The Civ player who plays the python-chess colour (chess.WHITE or chess.BLACK)."""
+        if colour == chess.WHITE:
+            return self.white_player
+        return 1 - self.white_player
+
+    def lookAtBoard(self):
+        """Points the camera at the board from the human's side."""
+        # The turn is set absolutely, so it is right whether or not the camera kept the turn
+        # of an earlier game in this session.
+        if self.default_camera_turn is None:
+            self.default_camera_turn = CyCamera().GetBaseTurn()
+
+        if self.isHumanWhite():
+            CyCamera().SetBaseTurn(self.default_camera_turn)
+            CyCamera().JustLookAtPlot(CyMap().plot(4, 4))
+        else:
+            # seen from Black's side: turned half way round, centred on the mirrored square
+            CyCamera().SetBaseTurn(self.default_camera_turn + 180.0)
+            CyCamera().JustLookAtPlot(CyMap().plot(5, 5))
 
     def onUnitMove(self, argsList):
         "Unit Moved"
@@ -331,9 +301,7 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         moved_unit_id, path_start_x, path_start_y, path_end_x, path_end_y = argsList
 
         chess_obj = self.civ_chess_obj
-        mover = 0
-        if chess_obj.board.turn == chess.BLACK:
-            mover = 1
+        mover = self.playerOfColour(chess_obj.board.turn)
 
         status = chess_obj.process_move(path_start_x, path_start_y, path_end_x, path_end_y)
         if status == GAME_STATUS_IGNORED:
@@ -375,6 +343,11 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
     def onGameUpdate(self, argsList):
         """Called by the game many times per second; plays a queued engine reply when ready."""
         self.parent.onGameUpdate(self, argsList)
+
+        if self.engine_first_move_pending:
+            self.engine_first_move_pending = False
+            self.playEngineReply()
+            return
 
         if self.engine_reply_square is None:
             return
@@ -473,11 +446,8 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         board = self.civ_chess_obj.board
 
         if status == GAME_STATUS_CHECKMATE:
-            # player 0 plays White, player 1 plays Black; the side to move is the one mated
-            if board.turn == chess.WHITE:
-                iWinner = 1
-            else:
-                iWinner = 0
+            # the side to move is the one mated
+            iWinner = self.playerOfColour(not board.turn)
             gc.getGame().setWinner(gc.getPlayer(iWinner).getTeam(), gc.getInfoTypeForString("VICTORY_CHECKMATE"))
             return True
 
@@ -518,7 +488,7 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
                 for i in range(pPlot.getNumUnits()):
                     pUnit = pPlot.getUnit(i)
                     if civ_to_chess.has_key(pUnit.getChessPieceType()):
-                        found = (civ_to_chess[pUnit.getChessPieceType()], pUnit.getOwner() == 0)
+                        found = (civ_to_chess[pUnit.getChessPieceType()], pUnit.getOwner() == self.white_player)
 
                 if expected is None:
                     if found is not None:

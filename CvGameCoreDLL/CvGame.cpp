@@ -426,6 +426,7 @@ void CvGame::reset(HandicapTypes eHandicap, bool bConstructorCall)
 	clearChessLegalMoves();
 	m_iChessPathEndX = -1;
 	m_iChessPathEndY = -1;
+	m_eChessWhitePlayer = (PlayerTypes)0;
 
 	m_iElapsedGameTurns = 0;
 	m_iStartTurn = 0;

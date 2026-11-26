@@ -275,6 +275,7 @@ public:
 	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
 	void setLegalMoves(const std::string& szMoves);
 	void slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY);
+	void setChessWhitePlayer(int iPlayer);	// Civ4Chess
 
 protected:
 	CvGame* m_pGame;

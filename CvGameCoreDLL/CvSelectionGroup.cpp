@@ -560,7 +560,8 @@ void CvSelectionGroup::updateMission()
 			if (headUnit != NULL)
 			{
 				headUnit->finishMoves();
-				if (headUnit->getOwner() == 0) {
+				// Civ4Chess: White faces north, Black south; either player can be White
+				if (headUnit->getOwner() == GC.getGameINLINE().getChessWhitePlayer()) {
 					headUnit->setFacingDirection(DIRECTION_NORTH);
 				} else {
 					headUnit->setFacingDirection(DIRECTION_SOUTH);

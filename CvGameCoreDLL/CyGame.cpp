@@ -1177,3 +1177,12 @@ void CyGame::slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY)
 		m_pGame->slideChessPiece(iStartX, iStartY, iEndX, iEndY);
 	}
 }
+
+// Civ4Chess
+void CyGame::setChessWhitePlayer(int iPlayer)
+{
+	if (m_pGame)
+	{
+		m_pGame->setChessWhitePlayer((PlayerTypes)iPlayer);
+	}
+}

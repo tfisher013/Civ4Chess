@@ -126,11 +126,13 @@ def showEspionageAdvisor():
 
 # Civ4Chess: the map's starting plots lie off the board on purpose (a starting plot on the
 # board gets Civ's free settler/worker/scout units), so the camera starts out looking at
-# nothing. Point it at the board when the Dawn of Man screen closes.
+# nothing. Point it at the board when the Dawn of Man screen closes, then ask which colour
+# the human plays (the pieces are placed after that choice).
 class Civ4ChessDawnOfMan(CvDawnOfMan.CvDawnOfMan):
 	def onClose(self):
 		CvDawnOfMan.CvDawnOfMan.onClose(self)
 		CyCamera().JustLookAtPlot(CyMap().plot(4, 4))
+		CvEventInterface.getEventManager().showColourChoice()
 		return 0
 
 dawnOfMan = Civ4ChessDawnOfMan(DAWN_OF_MAN)

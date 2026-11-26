@@ -10077,7 +10077,9 @@ void CvUnit::finishMoves()
 
 	// check for promotion
 	if (m_eChessPieceType == CHESS_PIECE_PAWN && !m_bDeletePromotedUnit) {
-		if ((m_eOwner == 0 && m_iY == 8) || (m_eOwner == 1 && m_iY == 1)) {
+		// Civ4Chess: either player can play White, so go by the rank: a pawn can only reach rank 8
+		// if it is White and rank 1 if it is Black
+		if (m_iY == 8 || m_iY == 1) {
 			// Civ4Chess: logMsg takes no format arguments, so format the message first
 			char szMessage[128];
 			sprintf(szMessage, "Promoting pawn (unit %d) of player %d; pawn will delete itself...", getID(), (int)m_eOwner);
@@ -10089,7 +10091,7 @@ void CvUnit::finishMoves()
 				m_iX, 
 				m_iY, 
 				NO_UNITAI,
-				m_eOwner == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH,
+				m_iY == 8 ? DIRECTION_NORTH : DIRECTION_SOUTH,
 				CHESS_PIECE_QUEEN
 			);
 			uQueen->setMoves(0);

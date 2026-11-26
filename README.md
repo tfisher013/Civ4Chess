@@ -46,7 +46,8 @@ Never put the token in source files.
 
 1. Start the bridge server (optional; without it the engine reply is skipped).
 2. Launch Beyond the Sword → **Advanced → Load a Mod → Civ4Chess**.
-3. Start a game on the `Civ4Chess` public map. Player 0 plays White (ranks 1–2), player 1 plays Black.
+3. Start a game on the `Civ4Chess` public map. After the Dawn of Man screen, choose White, Black or Random; Stockfish plays
+   the other side.
 
 Python output goes to Civ4's `PythonDbg.log` when logging is enabled in `CivilizationIV.ini`.
 

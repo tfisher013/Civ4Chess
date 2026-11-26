@@ -6,9 +6,25 @@ and need an in-game check._
 
 ---
 
-## 0. Current state and next steps (updated 2026-11-21, end of Phase 1 coding)
+## 0. Current state and next steps (updated 2026-11-26, Phase 2 working in game)
 
-**Branches** (all pushed; the maintainer merges PRs, Claude never does): `main` ← `phase0-stabilize` ← `phase1-python-rules` (current).
+**Branches** (all pushed; the maintainer merges PRs, Claude never does): `main` ← `phase0-stabilize` ← `phase1-python-rules`
+← `phase2-engine` (current). No PRs opened yet.
+
+**2026-11-26 update (supersedes the Phase 1 notes below where they differ)**
+- Phase 1 crashed Civ4 at the main menu: extra fields in `CvSelectionGroup` break the exe. Fixed by keeping that state in `CvGame`
+  (`d30ff5f`). Phase 1 then verified in game: legal-move table, slides, captures, en passant, CHESS-SYNC OK.
+- Phase 2 (`phase2-engine`): Stockfish plays Black. Verified in game: a full game to checkmate (36 moves) with captures by both
+  sides, long-range human captures, en passant by White; CHESS-SYNC OK throughout. Also fixed `CvUnit::attack` reporting the
+  attacker's start square after a quick combat had already moved it (showed up as `d4d4`).
+- Also verified in game: White kingside castling (rook follows, CHESS-SYNC OK); en passant by White (5.exd6 in the first
+  Stockfish game).
+- Still unverified in game: queenside castling, castling by Stockfish, en passant by Stockfish, promotion, draws.
+  Out-of-game tests: 24, all pass.
+- In-game testing by Claude works (launch/menu checks are scripted), but Civ4 does not receive Claude's right-clicks, so the
+  maintainer plays the moves and Claude reads `PythonDbg.log`.
+- Remaining Phase 2 items: engine HTTP call still blocks the game for ~1 s per reply; difficulty setting; colour choice
+  (human is always White); the old `CvGame::update`/`setChessMove` AI path is now unused.
 
 **Done**
 - Phase 0: token/Stockfish path moved to env vars, bridge engine kept alive, engine-reply crash fixed, castling/promotion/null-pointer
@@ -35,9 +51,7 @@ and need an in-game check._
 6. `ENGINE_OPPONENT_ENABLED` is **False** until Phase 2 (the engine's reply must move Civ units first).
 Look for `CHESS-SYNC OK` / `CHESS-SYNC MISMATCH` in `Logs/PythonDbg.log`, and `xml.log` for DLL messages.
 
-**Testing constraint:** the maintainer's machine (2016 MacBook Air, Boot Camp, integrated graphics) runs Civ4 with severe lag, so
-driving the game through screenshots/clicks is impractical. Prefer out-of-game tests and log-based checks; the maintainer does short
-manual in-game checks and reports `PythonDbg.log` / `xml.log` output.
+**Testing:** see the 2026-11-26 update above (Claude launches Civ4 and reads logs; the maintainer plays the moves).
 
 **Next steps**
 1. Maintainer does a short in-game check of the list above (or we add a log-only replay hook so one launch produces a full report).

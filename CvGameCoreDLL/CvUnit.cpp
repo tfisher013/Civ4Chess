@@ -2924,12 +2924,17 @@ void CvUnit::attack(CvPlot* pPlot, bool bQuick)
 
 	setAttackPlot(pPlot, false);
 
+	// Civ4Chess: remember where the attacker started; when the combat resolves at once the
+	// attacker has already moved onto the target by the time Python is told about the move
+	int iStartX = m_iX;
+	int iStartY = m_iY;
+
 	updateCombat(bQuick);
 
 	CyArgsList args;
 	args.add(getID());
-	args.add(m_iX);
-	args.add(m_iY);
+	args.add(iStartX);
+	args.add(iStartY);
 	args.add(pPlot->getX());
 	args.add(pPlot->getY());
 
@@ -10073,7 +10078,10 @@ void CvUnit::finishMoves()
 	// check for promotion
 	if (m_eChessPieceType == CHESS_PIECE_PAWN && !m_bDeletePromotedUnit) {
 		if ((m_eOwner == 0 && m_iY == 8) || (m_eOwner == 1 && m_iY == 1)) {
-			gDLL->logMsg("xml.log", "Promoting pawn (unit %d) of player %d; pawn will delete itself...", getID(), m_eOwner);
+			// Civ4Chess: logMsg takes no format arguments, so format the message first
+			char szMessage[128];
+			sprintf(szMessage, "Promoting pawn (unit %d) of player %d; pawn will delete itself...", getID(), (int)m_eOwner);
+			gDLL->logMsg("xml.log", szMessage);
 
 			m_bDeletePromotedUnit = true;
 			m_eChessPieceType = NO_CHESS_PIECE;

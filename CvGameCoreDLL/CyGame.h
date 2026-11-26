@@ -273,6 +273,8 @@ public:
 
 	// Civ4Chess
 	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
+	void setLegalMoves(const std::string& szMoves);
+	void slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY);
 
 protected:
 	CvGame* m_pGame;

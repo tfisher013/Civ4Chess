@@ -546,6 +546,25 @@ public:
 	// Civ4Chess
 	void setChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
 
+	// Civ4Chess: python-chess is the referee. Python sends the legal moves for the side to
+	// move as space separated UCI strings (e.g. "e2e4 g1f3"); the DLL only allows those moves.
+	void setChessLegalMoves(const char* szMoves);
+	bool isChessMoveLegal(int iStartX, int iStartY, int iEndX, int iEndY) const;
+
+	// Civ4Chess: the move currently being carried out (it stays legal until it completes, even
+	// though Python replaces the legal move table as soon as the move is reported)
+	void setActiveChessMove(int iStartX, int iStartY, int iEndX, int iEndY);
+	void clearActiveChessMove();
+
+	// Civ4Chess: moves a piece without consulting the legal move table (castling rook)
+	void slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY);
+
+	// Civ4Chess: destination of the move mission in progress (CvSelectionGroup::pushMission sets it,
+	// updateMission reads it). Kept here because CvSelectionGroup must not grow.
+	void setChessPathEnd(int iX, int iY) { m_iChessPathEndX = iX; m_iChessPathEndY = iY; }
+	int getChessPathEndX() const { return m_iChessPathEndX; }
+	int getChessPathEndY() const { return m_iChessPathEndY; }
+
 protected:
 	int m_iElapsedGameTurns;
 	int m_iStartTurn;
@@ -692,6 +711,18 @@ protected:
 
 	// Civ4Chess: CvGame stores AI chess move
 	ChessMove m_chessMove;
+
+	// Civ4Chess: legal moves from Python, indexed by chessMoveKey(). A plain array, not an STL
+	// container: a std::set member in CvGame crashed the game at the main menu.
+	enum { CHESS_MOVE_KEY_COUNT = 8889 };	// chessMoveKey(8,8,8,8) + 1
+	bool m_abChessLegalMoves[CHESS_MOVE_KEY_COUNT];
+	int m_iNumChessLegalMoves;
+	int m_iChessPathEndX;
+	int m_iChessPathEndY;
+	void clearChessLegalMoves();
+	bool m_bChessActiveMove;
+	ChessMove m_chessActiveMove;
+	static int chessMoveKey(int iStartX, int iStartY, int iEndX, int iEndY);
 };
 
 #endif

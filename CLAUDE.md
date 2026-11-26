@@ -21,7 +21,14 @@ Data flow: Civ4 engine ↔ DLL ↔ (Boost.Python) mod Python ↔ HTTP `127.0.0.1
 - `Assets/Python/CvCiv4ChessEvents.py` — `onGameStart` places pieces; `onPathCompleted` syncs the python-chess board.
 - `Assets/Python/ChessUtils.py` — `CivChessObj` (python-chess board wrapper), `make_engine_move` (HTTP to bridge).
 - DLL hooks that call Python `onPathCompleted(unitId, startX, startY, endX, endY)`:
-  `CvSelectionGroup::updateMission`, `CvUnit::attack`, `CvUnit::finishMoves` (pawn promotion), `CvGame::update` (applies `setChessMove`).
+  `CvSelectionGroup::updateMission` (once the piece stands on its destination), `CvUnit::attack`, `CvGame::update` (applies `setChessMove`).
+- **Rules live in python-chess.** After every move Python calls `CyGame.setLegalMoves("e2e4 g1f3 ...")`; `CvUnit::canMoveInto`
+  only allows moves on that list (`CvGame::isChessMoveLegal`). A move in progress stays allowed via `setActiveChessMove` until it completes.
+  Chess pieces skip the pathfinder: `CvSelectionGroup::groupPathTo` slides them to the destination in one go (or attacks from where they stand).
+  Python applies castling (`CyGame.slideChessPiece` for the rook) and en passant (kills the victim) after `process_move`. Promotion is always a queen.
+- **Stockfish plays Black** (`ENGINE_OPPONENT_ENABLED` in `CvCiv4ChessEvents.py`): after a human move the reply is queued and played
+  from `onGameUpdate` once the human piece stands on its square (a capture is reported when the attack starts). `playEngineReply`
+  removes the captured piece, `slideChessPiece`s the mover, then gives White's units their moves back (no Civ end-turn needed).
 - Bridge: `POST /engine-move`, `POST /challenge/{username}`, `GET /challenge`, `GET /account/playing`.
 
 ## Key conventions
@@ -48,13 +55,17 @@ Data flow: Civ4 engine ↔ DLL ↔ (Boost.Python) mod Python ↔ HTTP `127.0.0.1
   Treat real `error C`/`LNK` lines, or a missing copy line, as failure. `build_dll.bat` files are gitignored and not used.
 - Bridge: from `BridgeServer/`, activate `.venv`, set `STOCKFISH_PATH` and `LICHESS_TOKEN` env vars, then
   `fastapi dev bridge_server.py --port 8000` (mod expects port 8000). See `README.md`.
-- Test: no automated tests. Verification is manual: launch BtS → Load mod Civ4Chess → play the `Civ4Chess` public map.
+- Test: `C:Python26python -B Tests	est_chess_utils.py` (out-of-game, Python 2.x, covers rules/castling/en passant/promotion/draws).
+  In-game verification is manual: launch BtS → Load mod Civ4Chess → play the `Civ4Chess` public map; `PythonDbg.log` gets `CHESS-SYNC` lines comparing the python-chess board with the map.
+  python-chess 0.20.0 needs Python 2.7 `collections.Counter` for repetition checks, which Civ4 lacks: use `CivChessObj` (own repetition counting), never `board.can_claim_*`.
 
 ## Warnings
 
 - Secrets (Lichess token) and machine paths (Stockfish) come from env vars in the bridge. Never hard-code them again.
 - Don't touch vendored/third-party code without reason: `CvGameCoreDLL/Boost-1.32.0`, `CvGameCoreDLL/Python24`, `Assets/Python/simplejson`,
   `Assets/Python/chess.py`, `BridgeServer/.venv`. Never read or modify the binary DLL/PDB/obj outputs.
+- **Never add data members to `CvSelectionGroup`**: two extra ints crashed Civ4 at the main menu (the exe depends on its
+  layout). Put new chess state in `CvGame`, which is safe to extend.
 - Most files in `CvGameCoreDLL/` are stock Firaxis SDK source; changes ripple into save format and Python bindings.
   New `CvUnit` fields must be added to `read`/`write` (current chess fields are not serialized — saves lose piece types).
 - Changing a `Cy*` signature requires updating the matching `Cy*Interface*.cpp` Boost.Python registration.

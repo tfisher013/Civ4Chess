@@ -264,6 +264,8 @@ void CyGamePythonInterface()
 		
 		// Civ4Chess
 		.def("setChessMove", &CyGame::setChessMove, "void (int iStartX, int iStartY, int iEndX, int iEndY)")
+		.def("setLegalMoves", &CyGame::setLegalMoves, "void (string szMoves) - space separated UCI moves the side to move may play")
+		.def("slideChessPiece", &CyGame::slideChessPiece, "void (int iStartX, int iStartY, int iEndX, int iEndY) - moves a piece ignoring the legal move table (castling rook)")
 		;
 
 	python::class_<CyDeal>("CyDeal")

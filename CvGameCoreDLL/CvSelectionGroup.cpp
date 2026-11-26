@@ -421,6 +421,7 @@ void CvSelectionGroup::pushMission(MissionTypes eMission, int iData1, int iData2
 	// Civ4Chess: store path start when unit is moving
 	if (eMission == MISSION_MOVE_TO || eMission == MISSION_ROUTE_TO) {
 		pathStartPlot = getHeadUnit()->plot();
+		GC.getGameINLINE().setChessPathEnd(iData1, iData2);
 	}
 
 	if (!bAppend)
@@ -565,13 +566,13 @@ void CvSelectionGroup::updateMission()
 					headUnit->setFacingDirection(DIRECTION_SOUTH);
 				}
 
-				// Civ4Chess: alert the Python about a move completion so the board state can be updated
-				// (only when a move mission actually recorded a start plot)
-				FAStarNode* lastPlotNode = getPathLastNode();
-				if (pathStartPlot != NULL && lastPlotNode != NULL)
+				// Civ4Chess: alert the Python about a move completion so the board state can be updated.
+				// Only report once the piece really stands on the destination: this block also runs
+				// while a move or capture is still in progress, and a cancelled mission must not
+				// be reported as a move.
+				CvPlot* endPathPlot = GC.getMapINLINE().plotINLINE(GC.getGameINLINE().getChessPathEndX(), GC.getGameINLINE().getChessPathEndY());
+				if (pathStartPlot != NULL && endPathPlot != NULL && headUnit->at(endPathPlot->getX_INLINE(), endPathPlot->getY_INLINE()))
 				{
-					CvPlot* endPathPlot = GC.getMapINLINE().plotSorenINLINE(lastPlotNode->m_iX, lastPlotNode->m_iY);
-
 					CyArgsList args;
 					args.add(headUnit->getID());
 					args.add(pathStartPlot->getX());
@@ -579,8 +580,10 @@ void CvSelectionGroup::updateMission()
 					args.add(endPathPlot->getX());
 					args.add(endPathPlot->getY());
 
-					// Civ4Chess: clear before calling out so a stale start plot is never reused
+					// Civ4Chess: clear before calling out so a stale start plot is never reused,
+					// and the move no longer needs its special permission once it has completed
 					pathStartPlot = NULL;
+					GC.getGameINLINE().clearActiveChessMove();
 
 					long lResult=0;
 					gDLL->getPythonIFace()->callFunction(
@@ -3174,6 +3177,31 @@ bool CvSelectionGroup::groupPathTo(int iX, int iY, int iFlags)
 
 	FAssertMsg(canAllMove(), "canAllMove is expected to be true");
 
+	// Civ4Chess: chess pieces make their whole move in one go. Legality was decided by
+	// python-chess (see CvGame::isChessMoveLegal), so there is no path to find: the piece
+	// slides straight to the destination, or captures from where it stands.
+	CvUnit* pChessUnit = getHeadUnit();
+	if (pChessUnit != NULL && pChessUnit->getChessPieceType() != NO_CHESS_PIECE)
+	{
+		if (!pChessUnit->canMoveOrAttackInto(pDestPlot))
+		{
+			return false;
+		}
+
+		GC.getGameINLINE().setActiveChessMove(pChessUnit->getX_INLINE(), pChessUnit->getY_INLINE(), iX, iY);
+
+		if (pDestPlot->isVisibleEnemyUnit(pChessUnit))
+		{
+			pChessUnit->attack(pDestPlot, false);
+		}
+		else
+		{
+			groupMove(pDestPlot, false, NULL, true);
+		}
+
+		return true;
+	}
+
 	if (getDomainType() == DOMAIN_AIR)
 	{
 		if (!canMoveInto(pDestPlot))
@@ -3214,15 +3242,8 @@ bool CvSelectionGroup::groupPathTo(int iX, int iY, int iFlags)
 	if(pPathPlot == pDestPlot)
 		bEndMove = true;
 
-	// Civ4Chess: intercept two square pawn movements and handle as atomic
-	CvUnit* pUnit = getHeadUnit();
-	if (pUnit->getChessPieceType() == CHESS_PIECE_PAWN && abs(pUnit->getY() - iY) == 2)
-	{
-		groupMove(pDestPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, true);
-	} else {
-		groupMove(pPathPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, bEndMove);
-	}
-    
+	groupMove(pPathPlot, iFlags & MOVE_THROUGH_ENEMY, NULL, bEndMove);
+
 	return true;
 }
 

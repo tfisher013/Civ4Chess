@@ -1161,3 +1161,19 @@ void CyGame::setChessMove(int iStartX, int iStartY, int iEndX, int iEndY)
 		m_pGame->setChessMove(iStartX, iStartY, iEndX, iEndY);
 	}
 }
+
+void CyGame::setLegalMoves(const std::string& szMoves)
+{
+	if (m_pGame)
+	{
+		m_pGame->setChessLegalMoves(szMoves.c_str());
+	}
+}
+
+void CyGame::slideChessPiece(int iStartX, int iStartY, int iEndX, int iEndY)
+{
+	if (m_pGame)
+	{
+		m_pGame->slideChessPiece(iStartX, iStartY, iEndX, iEndY);
+	}
+}

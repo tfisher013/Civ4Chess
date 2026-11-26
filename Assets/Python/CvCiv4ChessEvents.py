@@ -154,6 +154,21 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
         self.parent = CvEventManager.CvEventManager
         self.parent.__init__(self)
+        self.resetGameState()
+
+        # the camera's base turn before it was ever turned for Black (kept across games)
+        self.default_camera_turn = None
+
+        self.Events[EVENT_CHOOSE_COLOUR] = ('ChooseColour', self.applyChooseColour, self.beginChooseColour)
+        # no "DEBUG Event" message on screen for this popup
+        if EVENT_CHOOSE_COLOUR not in CvUtil.SilentEvents:
+            CvUtil.SilentEvents.append(EVENT_CHOOSE_COLOUR)
+
+    def resetGameState(self):
+        """
+        Clears everything that belongs to one game. Civ4 creates this event manager once per
+        session, not once per game, so a new game started from the main menu must reset it.
+        """
         self.civ_chess_obj = CivChessObj()
 
         # square (x, y) of a human move that the engine still has to answer, see onGameUpdate
@@ -165,13 +180,10 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
         # Civ player who plays White; None until the colour has been chosen
         self.white_player = None
 
-        self.Events[EVENT_CHOOSE_COLOUR] = ('ChooseColour', self.applyChooseColour, self.beginChooseColour)
-        # no "DEBUG Event" message on screen for this popup
-        if EVENT_CHOOSE_COLOUR not in CvUtil.SilentEvents:
-            CvUtil.SilentEvents.append(EVENT_CHOOSE_COLOUR)
-
     def onGameStart(self, argsList):
         "Called at the start of the game"
+        # before the parent call, which opens the Dawn of Man screen
+        self.resetGameState()
         self.parent.onGameStart(self, argsList)
 
         # ensure sides are at war
@@ -241,11 +253,17 @@ class CvCiv4ChessEvents(CvEventManager.CvEventManager):
 
     def lookAtBoard(self):
         """Points the camera at the board from the human's side."""
+        # The turn is set absolutely, so it is right whether or not the camera kept the turn
+        # of an earlier game in this session.
+        if self.default_camera_turn is None:
+            self.default_camera_turn = CyCamera().GetBaseTurn()
+
         if self.isHumanWhite():
+            CyCamera().SetBaseTurn(self.default_camera_turn)
             CyCamera().JustLookAtPlot(CyMap().plot(4, 4))
         else:
             # seen from Black's side: turned half way round, centred on the mirrored square
-            CyCamera().SetBaseTurn(CyCamera().GetBaseTurn() + 180.0)
+            CyCamera().SetBaseTurn(self.default_camera_turn + 180.0)
             CyCamera().JustLookAtPlot(CyMap().plot(5, 5))
 
     def onUnitMove(self, argsList):

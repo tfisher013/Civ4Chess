@@ -64,6 +64,8 @@ Data flow: Civ4 engine ↔ DLL ↔ (Boost.Python) mod Python ↔ HTTP `127.0.0.1
 - Secrets (Lichess token) and machine paths (Stockfish) come from env vars in the bridge. Never hard-code them again.
 - Don't touch vendored/third-party code without reason: `CvGameCoreDLL/Boost-1.32.0`, `CvGameCoreDLL/Python24`, `Assets/Python/simplejson`,
   `Assets/Python/chess.py`, `BridgeServer/.venv`. Never read or modify the binary DLL/PDB/obj outputs.
+- The WB map's `StartingX/StartingY` are deliberately off the 10×10 map: a starting plot on the board gets Civ's free
+  settler/worker/scout units. The camera is pointed at the board from Python when Dawn of Man closes (`CvScreensInterface.py`).
 - **Never add data members to `CvSelectionGroup`**: two extra ints crashed Civ4 at the main menu (the exe depends on its
   layout). Put new chess state in `CvGame`, which is safe to extend.
 - Most files in `CvGameCoreDLL/` are stock Firaxis SDK source; changes ripple into save format and Python bindings.
